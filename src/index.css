@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root{
+  --selected-color: white;
+  --modal-filter: "";
+}
+
+#root {
+  height: 100vh;
+  display: flex;
+}
+
+body {
+  padding: 0px;
+  margin: 0px;
+}
+input, textarea{
+  outline: none !important;
+}
+
+* {
+  scrollbar-width: thin; /* "auto" or "thin" */
+  scrollbar-color: black white; /* scroll thumb and track */
+}
+
+::-webkit-scrollbar {
+  height: 12px;
+  width: 6px;
+  background: lightgrey;
+}
+
+::-webkit-scrollbar-thumb {
+  background: black;
+}
+
+::-webkit-scrollbar-corner {
+  background: lightgrey;
+}
