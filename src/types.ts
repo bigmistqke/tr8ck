@@ -3,7 +3,7 @@ import Faust2WebAudio from "faust2webaudio"
 interface InstrumentBase {
     active: true
     pan: number
-    hue: number
+    color: string
 }
 
 export interface Sampler extends InstrumentBase {
@@ -18,12 +18,12 @@ export interface Sampler extends InstrumentBase {
 export interface Synth extends InstrumentBase {
     type: "synth",
     code: string,
-    node: Faust2WebAudio.FaustScriptProcessorNode | undefined
+    node: Faust2WebAudio.FaustAudioWorkletNode | undefined
     error?: string
 }
 export type Instrument = Sampler | Synth 
 
-export type getNode = (code: string) => Promise<Faust2WebAudio.FaustScriptProcessorNode | undefined>
+export type getNode = (code: string) => Promise<Faust2WebAudio.FaustAudioWorkletNode | undefined>
   
 export   interface ActiveNote  {
     active: true
@@ -36,5 +36,11 @@ export   interface ActiveNote  {
     error?: undefined
   }
   export type Note = ActiveNote | Inactive
+
+  export interface Pattern {
+    sequences: Note[][]
+    id: string
+    color: string
+  }
   
   export type Indices = [number, number]

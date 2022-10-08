@@ -10,8 +10,10 @@ import { INSTRUMENT_AMOUNT, ROOT_FREQUENCY, SEQUENCE_AMOUNT, SEQUENCE_LENGTH } f
 import { Inactive, Indices, Instrument, Note } from "./types"
 import InstrumentUI from "./components/InstrumentUI"
 import InstrumentSelection from "./components/InstrumentSelection"
-import Pattern from "./components/Pattern"
+import MicroMacro from "./components/MicroMacro"
 import {store, setStore, actions} from "./Store"
+import randomColor from "./helpers/randomColor"
+
 
 const defaultCode = `import("stdfaust.lib");
 bubble(f0,trig) = os.osc(f) * (exp(-damp*time) : si.smooth(0.99))
@@ -70,13 +72,13 @@ function App() {
       for(let j = 0; j < INSTRUMENT_AMOUNT; j++){
         const node = await actions.getNode(defaultCode)
         if(!node) return
-        let hue = (i / (INSTRUMENT_AMOUNT - 1))* 50 + (j / (INSTRUMENT_AMOUNT - 1)) * 200;
+        // let hue = (i / (INSTRUMENT_AMOUNT - 1))* 50 + (j / (INSTRUMENT_AMOUNT - 1)) * 200;
         setStore("instruments", i, j, {
           active: true,
           type: "synth",
           code: defaultCode,
           node: undefined,
-          hue
+          color: randomColor()
         })
         createEffect(async () => {
           const instrument = store.instruments[i][j]
@@ -86,6 +88,7 @@ function App() {
               setStore("instruments", i, j, "error", "can not compile")
               return
             }
+
             node.connect(destination)
             if(instrument.node)
               instrument.node.disconnect();
@@ -110,12 +113,15 @@ function App() {
     setStore("context", context)
 
     await initInstruments(context.destination)
-    setInterval(() => setStore("clock", (c) => c + 1), 100)
+    setInterval(() => {
+      setStore("clock", (c) => c + 1);
+      actions.render()
+    }, 100)
 
     const root = document.documentElement;
     const [i,j] = store.selectedInstrumentIndices;
     const instrument = store.instruments[i][j]
-    root.style.setProperty('--selected-color', `hsl(${(instrument as Instrument).hue}, 50%, 50%)`)
+    root.style.setProperty('--selected-color', (instrument as Instrument).color)
 
     return () => context.close()
   })
@@ -124,9 +130,9 @@ function App() {
   createEffect(()=>{
     const [i,j] = store.selectedInstrumentIndices;
     const instrument = store.instruments[i][j]
-    if("hue" in instrument){
+    if("color" in instrument){
       const root = document.documentElement;
-      root.style.setProperty('--selected-color', `hsl(${instrument.hue}, 50%, 50%)`)
+      root.style.setProperty('--selected-color', (instrument as Instrument).color)
     }
   })
 
@@ -138,15 +144,11 @@ function App() {
           frequency={store.selectedFrequency}
           setKey={(key) => setStore("selectedFrequency", Math.floor(ROOT_FREQUENCY *  Math.pow(Math.pow(2, 1/12), key)))}
         />
-        <Pattern/>
+        <MicroMacro/>
       </div>
       <div class="flex flex-1 flex-col h-full p-2 gap-4">
         <Show when={actions.getSelectedInstrument().active}>
-            <InstrumentUI 
-              instrument={actions.getSelectedInstrument() as Instrument} 
-              instrumentIndices={store.selectedInstrumentIndices} 
-              instruments={store.instruments}
-            />
+            <InstrumentUI />
             <InstrumentSelection
               instruments={store.instruments}
               selectInstrument={(i, j) => setStore("selectedInstrumentIndices", [i, j])}

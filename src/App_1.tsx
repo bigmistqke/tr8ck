@@ -67,7 +67,7 @@ const Sequence = (props: {
     panner.connect(props.context.destination)
     faustNode()!.connect(panner)
 
-    console.log("THIS HAPPENS!!!")
+
   })
   createEffect(() => {
     if (!faustNode()) return

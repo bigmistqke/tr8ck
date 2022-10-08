@@ -21,19 +21,19 @@ input, textarea{
 
 * {
   scrollbar-width: thin; /* "auto" or "thin" */
-  scrollbar-color: black white; /* scroll thumb and track */
+  scrollbar-color: white rgba(0,0,0,0); /* scroll thumb and track */
 }
 
 ::-webkit-scrollbar {
   height: 12px;
   width: 6px;
-  background: lightgrey;
+  background: rgba(0,0,0,0);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: black;
+  background: rgba(0,0,0,0);
 }
 
 ::-webkit-scrollbar-corner {
-  background: lightgrey;
+  background: rgba(0,0,0,0);
 }

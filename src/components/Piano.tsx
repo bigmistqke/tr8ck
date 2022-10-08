@@ -25,7 +25,7 @@ export default function(props: {frequency: number, setKey: (key: number) => void
         {
           (_,index) => <div class="flex flex-1">
             <button 
-              class={`flex-1 relative bg-${notes[index() % 12]} ${isKeySelected(index()) ? "bg-selected" : ""}`}
+              class={`flex-1 relative bg-${notes[index() % 12]} ${isKeySelected(index()) ? "bg-selected" : "hover:bg-selected"}`}
               onclick={() => props.setKey(index())}
             >
             </button>

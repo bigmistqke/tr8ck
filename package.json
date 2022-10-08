@@ -19,7 +19,11 @@
     "vite-plugin-solid": "^2.3.0"
   },
   "dependencies": {
+    "@formkit/auto-animate": "1.0.0-beta.3",
+    "@thisbeyond/solid-dnd": "^0.7.1",
+    "randomcolor": "^0.6.2",
     "solid-headless": "^0.13.0",
-    "solid-js": "^1.5.1"
+    "solid-js": "^1.5.1",
+    "zeptoid": "^1.0.1"
   }
 }

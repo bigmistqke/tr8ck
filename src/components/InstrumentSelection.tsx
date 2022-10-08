@@ -9,10 +9,10 @@ const InstrumentSelection = (props: {
     const isSelected = (indices: Indices) => props.selectedInstrumentIndices[0] === indices[0] && props.selectedInstrumentIndices[1] === indices[1] 
     const getColor = (instrument: Instrument | Inactive, indices: Indices, isSelected: boolean) => {
       if(instrument.active){
-        if(isSelected){
-          return `hsl(${instrument.hue}, 75%, 50%`
-        }
-        return `hsl(${instrument.hue}, 50%, 50%`
+        /* if(isSelected){
+          return instrument.color
+        } */
+        return instrument.color
       }
       return "black"
     }

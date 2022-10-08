@@ -1,19 +1,27 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@formkit/auto-animate': 1.0.0-beta.3
+  '@thisbeyond/solid-dnd': ^0.7.1
   autoprefixer: ^10.4.12
   faust2webaudio: github:grame-cncm/faust2webaudio
   postcss: ^8.4.17
+  randomcolor: ^0.6.2
   solid-headless: ^0.13.0
   solid-js: ^1.5.1
   tailwindcss: ^3.1.8
   typescript: ^4.8.2
   vite: ^3.0.9
   vite-plugin-solid: ^2.3.0
+  zeptoid: ^1.0.1
 
 dependencies:
+  '@formkit/auto-animate': 1.0.0-beta.3
+  '@thisbeyond/solid-dnd': 0.7.1_solid-js@1.5.1
+  randomcolor: 0.6.2
   solid-headless: 0.13.0_solid-js@1.5.1
   solid-js: 1.5.1
+  zeptoid: 1.0.1
 
 devDependencies:
   autoprefixer: 10.4.12_postcss@8.4.17
@@ -342,6 +350,10 @@ packages:
     dev: true
     optional: true
 
+  /@formkit/auto-animate/1.0.0-beta.3:
+    resolution: {integrity: sha512-glsi+ytwQpxT/Ctr9GtcIfVr4dO6mJ04mQbNU8MFSdCdqMopHtyfU5Fib0+9lNFIeR0luY4/0NW95/2R5pKsag==}
+    dev: false
+
   /@jridgewell/gen-mapping/0.1.1:
     resolution: {integrity: sha512-sQXCasFk+U8lWYEe66WxRDOE9PjVz4vSM51fTu3Hw+ClTpUSQb718772vH3pyS5pShp6lvQM7SxgIDXXXmOX7w==}
     engines: {node: '>=6.0.0'}
@@ -400,6 +412,14 @@ packages:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.13.0
     dev: true
+
+  /@thisbeyond/solid-dnd/0.7.1_solid-js@1.5.1:
+    resolution: {integrity: sha512-+hlm84MfCNtZOi12tUf0WL2aBYyIhOCTA+lbT3hiJXmVnMRws0Rq1Y6WjQ5A43Xn/gvzzO9K7O+WK+t9UHTR4Q==}
+    peerDependencies:
+      solid-js: ^1.5
+    dependencies:
+      solid-js: 1.5.1
+    dev: false
 
   /acorn-node/1.8.2:
     resolution: {integrity: sha512-8mt+fslDufLYntIoPAaIMUe/lrbrehIiwmR3t2k9LljIzoigEPF27eLk2hy8zSGzmR/ogr7zbRKINMo1u0yh5A==}
@@ -1124,6 +1144,10 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
+  /randomcolor/0.6.2:
+    resolution: {integrity: sha512-Mn6TbyYpFgwFuQ8KJKqf3bqqY9O1y37/0jgSK/61PUxV4QfIMv0+K2ioq8DfOjkBslcjwSzRfIDEXfzA9aCx7A==}
+    dev: false
+
   /read-cache/1.0.0:
     resolution: {integrity: sha512-Owdv/Ft7IjOgm/i0xvNDZ1LrRANRfew4b2prF3OWMQLxLfu3bS8FVhCsrSCMK4lR56Y9ya+AThoTpDCTxCmpRA==}
     dependencies:
@@ -1259,6 +1283,10 @@ packages:
       - ts-node
     dev: true
 
+  /tiny-webcrypto/1.0.1:
+    resolution: {integrity: sha512-xmRCZrKqgLNfDVjj12Da9l7a/gKyqwIQ0gTIQ2p+/tbosZxFGW41QQ5C6Pwz9tiVO0OTUDh8IcBqncVHbq1RqQ==}
+    dev: false
+
   /to-fast-properties/2.0.0:
     resolution: {integrity: sha512-/OaKK0xYrs3DmxRYqL/yDc+FxFUVYhDlXMhRmv3z915w2HF1tnN1omB354j8VUGO/hbRzyD6Y3sA7v7GS/ceog==}
     engines: {node: '>=4'}
@@ -1280,6 +1308,12 @@ packages:
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true
+
+  /uint-rng/1.0.0:
+    resolution: {integrity: sha512-HsqjJ4zooFJC4RJKNJElcDvhqRydsO7KbJdyJWoFBFF0T+boJaD68KNxo58+KEuO8R4VFbAQfH7dncDMfQq/fQ==}
+    dependencies:
+      tiny-webcrypto: 1.0.1
+    dev: false
 
   /update-browserslist-db/1.0.4_browserslist@4.21.2:
     resolution: {integrity: sha512-jnmO2BEGUjsMOe/Fg9u0oczOe/ppIDZPebzccl1yDWGLFP16Pa1/RM5wEoKYPG2zstNcDuAStejyxsOuKINdGA==}
@@ -1360,6 +1394,12 @@ packages:
     resolution: {integrity: sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==}
     engines: {node: '>= 6'}
     dev: true
+
+  /zeptoid/1.0.1:
+    resolution: {integrity: sha512-LJrctN9zR01YuLUl2M8yhc7Z5HzlwgUADFnmM8VSPWO5IX+glR5kfX9rJ+Kwvs51ruh8lyijDZwW1mCu0PDBig==}
+    dependencies:
+      uint-rng: 1.0.0
+    dev: false
 
   github.com/grame-cncm/faust2webaudio/b6afee65ab72884b87b7aded3a027db3a44d17e2:
     resolution: {tarball: https://codeload.github.com/grame-cncm/faust2webaudio/tar.gz/b6afee65ab72884b87b7aded3a027db3a44d17e2}

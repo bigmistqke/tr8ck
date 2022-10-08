@@ -7,19 +7,17 @@ const Note = (props: {
     note: Note
     shouldBlink: boolean
 }) => {
-    createEffect(()=>{
+/*     createEffect(()=>{
     if(props.shouldBlink && props.note.active){
         actions.playNote(props.note.instrumentIndices, props.note.frequency)
     }
-    })
+    }) */
 
 
     const getColor = () => {
         if(!props.note.active) 
             return ""
-        if(props.shouldBlink)
-            return  `hsl(${actions.getHueInstrument(props.note.instrumentIndices)}, 100%, 50%)`
-        return `hsl(${actions.getHueInstrument(props.note.instrumentIndices)}, 50%, 50%)` 
+        return actions.getColorInstrument(props.note.instrumentIndices)
     }
 
     const compareIndices = (a: [number,number], b: [number, number]) => a[0] === b[0] && a[1] === b[1]
@@ -45,7 +43,7 @@ const Note = (props: {
             class={`flex flex-1 h-full relative overflow-hidden rounded-xl hover:bg-selected ${
                 props.shouldBlink ? "bg-white" : "bg-black"
             }`}
-            style={{background: getColor()}}
+            style={{background: getColor(), filter: props.shouldBlink ? "brightness(1.5)" : ""}}
         >
             <Show when={props.note.active}>
                 <div class="h-full flex-1 self-center flex items-center justify-center">

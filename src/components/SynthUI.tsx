@@ -4,6 +4,8 @@ import { Portal } from "solid-js/web"
 import { actions, setStore, store } from "../Store";
 import { Synth, Indices, Instrument, Inactive } from "../types"
 import {Button} from "./UI_elements";
+import zeptoid from "zeptoid"
+import randomColor from "../helpers/randomColor";
 
 function allStorage() {
     var entries = [],
@@ -25,13 +27,14 @@ function allStorage() {
 
 const SynthList = (props: {setCode: (code: string | null, title: string | null) => void}) => {
     return <div
-        class={`flex flex-col gap-4 h-96 overflow-auto align-center bg-gray-300 rounded-xl p-4`}
+        class={`flex flex-col gap-4 h-96 overflow-auto align-center bg-white rounded-xl p-4`}
     >
         <For each={allStorage()}>
             {
                 ([title,code]) => <button
                     class="h-16 w-full flex shrink-0 justify-center items-center rounded-xl text-2xl cursor-pointer bg-white hover:bg-black hover:text-white"
                     onclick={() => props.setCode(code, title)}
+                    style={{background: randomColor()}}
                 >{title?.replace("SYNTH_", "")}</button>
             }
         </For>
@@ -43,7 +46,7 @@ const SaveModal = (props: {setSaveMenuOpened: (boolean: boolean) => void, codeTi
     let codeTitleRef: HTMLInputElement
     let closeMenuRef: HTMLDivElement
 
-    const id = createUniqueId();
+    const id = zeptoid();
 
     const addToStorage =(e) => {
         e.preventDefault();
@@ -64,13 +67,13 @@ const SaveModal = (props: {setSaveMenuOpened: (boolean: boolean) => void, codeTi
         <div 
             ref={closeMenuRef!}
             class="absolute top-0 left-0 z-10 w-full h-full " onclick={(e)=>{
-                console.log(e.target);
+
                 if(e.target === closeMenuRef)
                     props.setSaveMenuOpened(false)  
             }}
         >
             <div class="flex flex-col w-3/6 h-32 absolute z-10 inset-1/2 bg-white -translate-x-1/2 -translate-y-1/2 rounded-xl overflow-hidden shadow-xl">
-                <div class="flex flex-1 items-center justify-center text-center text-2xl bg-gray-400 text-white">
+                <div class="flex flex-1 items-center justify-center text-center text-2xl bg-white text-white">
                     <span>save your patch</span>
                 </div>
                 <div class="flex flex-1">
@@ -139,11 +142,11 @@ const SaveModal = (props: {setSaveMenuOpened: (boolean: boolean) => void, codeTi
                         
                     </Match>
                     <Match when={!listOpened()}>
-                        <div class="flex flex-col gap-4 h-96">
+                        <div class="flex flex-col gap-4 h-96 rounded-2xl overflow-hidden">
                             <textarea
                                 value={props.instrument.code}
                                 ref={textarea!}
-                                class={`flex-1 font-mono bg-gray-300 overflow-auto text-black p-5 rounded-2xl ${props.instrument.error ? "border-red-500" : ""}`}
+                                class={`flex-1 font-mono bg-white overflow-auto text-black p-5  ${props.instrument.error ? "border-red-500" : ""}`}
                                 spellcheck={false}
                             />
                         </div>
