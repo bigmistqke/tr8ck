@@ -9,3 +9,13 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
 
 # form compositions from patterns
 ![afbeelding](https://user-images.githubusercontent.com/10504064/194711611-6bfff893-359f-4e8d-814e-bf9ac4cb8849.png)
+
+# TODO
+
+- [x] composition-view
+- [x] pattern-view
+- [x] synths with Faust
+- [ ] sampler
+- [ ] effect chain with Faust
+- [ ] synthax-highlighting and completions for Faust
+- [ ] save and render set
