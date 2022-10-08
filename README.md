@@ -2,7 +2,7 @@
 
 an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding via [`faust2webaudio`](https://github.com/grame-cncm/faust2webaudio) and UI powered by [`SolidJS`](https://www.solidjs.com/)
 
-![afbeelding](https://user-images.githubusercontent.com/10504064/194711333-443b2891-679e-4931-83f9-86e9af43d904.png)
+![tr8ck](https://user-images.githubusercontent.com/10504064/194712686-f1523f87-3085-430c-8ba5-aac2ac953622.gif)
 
 # create patterns
 ![afbeelding](https://user-images.githubusercontent.com/10504064/194711560-eb68c80d-7164-4e16-ac09-2deb6f93b6fb.png)
