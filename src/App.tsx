@@ -1,104 +1,22 @@
-import { createEffect, For, onMount, Show } from "solid-js"
-import { createStore } from "solid-js/store"
+import { createEffect, onCleanup, onMount, Show } from "solid-js"
+import  { Faust } from "faust2webaudio"
+
+import { setupAudio } from "./setupAudio"
+import {  ROOT_FREQUENCY } from "./constants"
+import {store, setStore, actions} from "./Store"
+
+
+import Piano from "./components/Piano"
+import InstrumentUI from "./components/instruments/Instrument"
+import MicroMacro from "./components/MicroMacro"
 
 import "./App.css"
-import { setupAudio } from "./setupAudio"
+import { Instrument } from "./types"
 
-import Faust2WebAudio, { Faust } from "faust2webaudio"
-import Piano from "./components/Piano"
-import { INSTRUMENT_AMOUNT, ROOT_FREQUENCY, SEQUENCE_AMOUNT, SEQUENCE_LENGTH } from "./constants"
-import { Inactive, Indices, Instrument, Note } from "./types"
-import InstrumentUI from "./components/InstrumentUI"
-import InstrumentSelection from "./components/InstrumentSelection"
-import MicroMacro from "./components/MicroMacro"
-import {store, setStore, actions} from "./Store"
-import randomColor from "./helpers/randomColor"
-
-
-const defaultCode = `import("stdfaust.lib");
-bubble(f0,trig) = os.osc(f) * (exp(-damp*time) : si.smooth(0.99))
-  with {
-    damp = 0.043*f0 + 0.0014*f0^(3/2);
-    f = f0*(1+sigma*time);
-    sigma = eta * damp;
-    eta = 0.075;
-    time = 0 : (select2(trig>trig'):+(1)) ~ _ : ba.samp2sec;
-  };
-
-process = t : g * bubble(hslider("freq", 600, 150, 2000, 1));
-
-g = t,1 : min;
-t = button("drop");
-`
 
 function App() {
-    // const [store, setStore] = useStore();
 
- /*  const [store, setStore] = createStore<{
-    clock: number
-    faust?: Faust
-    context?: AudioContext
-    selectedFrequency: number
-    selectedInstrumentIndices: Indices
-    sequences: Note[][]
-    instruments: (Instrument | Inactive)[][]
-  }>({
-    clock: -1,
-    faust: undefined,
-    context: undefined,
-    selectedFrequency: 554,
-    selectedInstrumentIndices: [0,0],
-    sequences: Array(SEQUENCE_AMOUNT)
-      .fill(0)
-      .map(() =>
-        Array(SEQUENCE_LENGTH)
-          .fill(0)
-          .map(() => ({
-            active: false
-      }))
-    ),
-    instruments: Array(INSTRUMENT_AMOUNT)
-      .fill(0)
-      .map(() =>
-        Array(INSTRUMENT_AMOUNT)
-          .fill(0)
-          .map(() => ({active: false})
-      )
-    ),
-  }) */
-
-  const initInstruments = async (destination: AudioDestinationNode) => {
-    for(let i = 0; i < INSTRUMENT_AMOUNT; i++){
-      for(let j = 0; j < INSTRUMENT_AMOUNT; j++){
-        const node = await actions.getNode(defaultCode)
-        if(!node) return
-        // let hue = (i / (INSTRUMENT_AMOUNT - 1))* 50 + (j / (INSTRUMENT_AMOUNT - 1)) * 200;
-        setStore("instruments", i, j, {
-          active: true,
-          type: "synth",
-          code: defaultCode,
-          node: undefined,
-          color: randomColor()
-        })
-        createEffect(async () => {
-          const instrument = store.instruments[i][j]
-          if("code" in instrument) {
-            const node = await actions.getNode(instrument.code)
-            if(!node) {
-              setStore("instruments", i, j, "error", "can not compile")
-              return
-            }
-
-            node.connect(destination)
-            if(instrument.node)
-              instrument.node.disconnect();
-            setStore("instruments", i, j, "node", node)
-            setStore("instruments", i, j, "error", undefined)
-          }
-        })
-      }
-    }
-  }
+  let clockInterval:number;
 
   onMount(async () => {
     const faust = new Faust({
@@ -112,23 +30,30 @@ function App() {
     setStore("faust", faust)
     setStore("context", context)
 
-    await initInstruments(context.destination)
-    setInterval(() => {
+    await actions.initInstruments(context.destination)
+
+    clockInterval = setInterval(() => {
       setStore("clock", (c) => c + 1);
       actions.render()
     }, 100)
 
     const root = document.documentElement;
-    const [i,j] = store.selectedInstrumentIndices;
-    const instrument = store.instruments[i][j]
-    root.style.setProperty('--selected-color', (instrument as Instrument).color)
+    const [i,j] = store.selection.instrumentIndices;
+    const instrument = store.instruments[i][j];
+    root.style.setProperty('--selected-color', (instrument as Instrument).color);
+
+    initKeyboard();
 
     return () => context.close()
   })
 
+  onCleanup(() => {
+    clearInterval(clockInterval)
+    store.context?.close()
+  })
 
   createEffect(()=>{
-    const [i,j] = store.selectedInstrumentIndices;
+    const [i,j] = store.selection.instrumentIndices;
     const instrument = store.instruments[i][j]
     if("color" in instrument){
       const root = document.documentElement;
@@ -136,28 +61,37 @@ function App() {
     }
   })
 
+  const initKeyboard = () => {
+    window.onkeydown = (e) => {
+      switch(e.code){
+        case "ShiftLeft":
+          setStore("keys", "shift", true);
+        case "ShiftRight":
+          setStore("keys", "shift", true);
+      }
+    }
+    window.onkeyup = (e) => {
+      switch(e.code){
+        case "ShiftLeft":
+          setStore("keys", "shift", false);
+        case "ShiftRight":
+          setStore("keys", "shift", false);
+      }
+    }
+  }
+
   return (
     <div class="flex flex-1 bg-slate-200" style={{"filter": "var(--modal-filter)"}}>
-      
       <div class="flex flex-1 h-full">
         <Piano
-          frequency={store.selectedFrequency}
-          setKey={(key) => setStore("selectedFrequency", Math.floor(ROOT_FREQUENCY *  Math.pow(Math.pow(2, 1/12), key)))}
+          frequency={store.selection.frequency}
+          setKey={(key) => setStore("selection", "frequency", Math.floor(ROOT_FREQUENCY *  Math.pow(Math.pow(2, 1/12), key)))}
         />
         <MicroMacro/>
       </div>
       <div class="flex flex-1 flex-col h-full p-2 gap-4">
-        <Show when={actions.getSelectedInstrument().active}>
-            <InstrumentUI />
-            <InstrumentSelection
-              instruments={store.instruments}
-              selectInstrument={(i, j) => setStore("selectedInstrumentIndices", [i, j])}
-              selectedInstrumentIndices={store.selectedInstrumentIndices}
-            />
-        </Show>
-        
+        <InstrumentUI />
       </div>
-      
   </div>
   )
 }

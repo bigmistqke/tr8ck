@@ -22,8 +22,8 @@ const MicroMacro = () => {
            
         {/* </div> */}
         <div class="flex gap-2 p-2 pt-0">
-            <Button onclick={actions.incrementSelectedPattern} style={{background: actions.getPatternColor(store.selectedPatternId)}}>
-                #{store.patterns.findIndex(pattern => pattern.id === store.selectedPatternId)}
+            <Button onclick={actions.incrementSelectedPattern} style={{background: actions.getPatternColor(store.selection.patternId)}}>
+                #{store.patterns.findIndex(pattern => pattern.id === store.selection.patternId)}
             </Button>
             <Button onclick={actions.toggleTrackMode}>{store.trackMode}</Button>
             <Button onclick={actions.copySelectedPattern}>copy</Button>

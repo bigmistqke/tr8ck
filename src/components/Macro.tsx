@@ -1,7 +1,7 @@
 import {  createSignal, For, onMount } from "solid-js"
 import { produce } from "solid-js/store"
 import { actions, setStore, store } from "../Store"
-import { Block } from "./UI_elements"
+import { Bar, Block } from "./UI_elements"
 import zeptoid from 'zeptoid';
 import getLocalPosition from "../helpers/getLocalPosition";
 import moveInArray from "../helpers/moveInArray";
@@ -158,7 +158,7 @@ const Macro = () => {
 
     return <div class="flex-1 flex gap-2 m-2 overflow-hidden">
         <div class="flex flex-col flex-1 overflow-hidden">
-            <Block class="mb-2 flex-grow-0 flex-auto">patterns</Block>
+            <Bar class="mb-2 flex-grow-0 flex-auto">patterns</Bar>
             <div class="flex flex-1 overflow-hidden rounded-xl">
                 <div class="flex-1 overflow-auto bg-white p-2" ref={patternRef}>
                     <For each={store.patterns} >
@@ -168,12 +168,11 @@ const Macro = () => {
                                 ondragstart={(e)=>dragstart(e, {type: "pattern", patternId: pattern.id})}
                                 class="mb-2 rounded-xl bg-red-500 translate-x-0"
                             >
-                                <Block 
-                                style={{
-                                    background: actions.getPatternColor(pattern.id) || "",
-                                }}
-                                
-                                >#{i()} </Block>
+                                <Bar 
+                                    style={{
+                                        background: actions.getPatternColor(pattern.id) || "",
+                                    }}
+                                >#{i()} </Bar>
                             </div> 
                         }
                     </For>
@@ -183,7 +182,7 @@ const Macro = () => {
             
         </div>
         <div class="flex flex-col flex-1 overflow-auto" >
-            <Block class="mb-2 flex-grow-0 flex-auto">composition</Block>
+            <Bar class="mb-2 flex-grow-0 flex-auto">composition</Bar>
             <div class="flex flex-1 overflow-hidden rounded-xl">
                 <div 
                     ref={compositionRef}
@@ -204,15 +203,15 @@ const Macro = () => {
                                 data-type="composition"
                                 data-id={id}
                             >
-                                <Block 
+                                <Bar 
                                     class="pointer-events-none" 
                                     style={{
                                         background: actions.getPatternColor(patternId),
-                                        filter: id === store.selectedBlockId ? "brightness(1.2)" : ""
+                                        filter: id === store.selection.blockId ? "brightness(1.2)" : ""
                                     }}
                                 >
                                     #{actions.getPatternIndex(patternId)}
-                                </Block>
+                                </Bar>
                             </div> 
                         }
                     </For>  

@@ -1,7 +1,8 @@
 {
-  "name": "vite-template-solid",
+  "name": "tr8ck3r",
   "version": "0.0.0",
   "description": "",
+  "type": "module",
   "scripts": {
     "start": "vite",
     "dev": "vite",
@@ -22,8 +23,11 @@
     "@formkit/auto-animate": "1.0.0-beta.3",
     "@thisbeyond/solid-dnd": "^0.7.1",
     "randomcolor": "^0.6.2",
-    "solid-headless": "^0.13.0",
     "solid-js": "^1.5.1",
+    "waveform-data": "^4.3.0",
+    "wavesurfer.js": "^6.3.0",
+    "worktank": "^2.3.0",
+    "worktank-vite-plugin": "^1.0.0",
     "zeptoid": "^1.0.1"
   }
 }

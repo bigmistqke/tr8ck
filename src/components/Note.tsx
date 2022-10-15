@@ -25,13 +25,13 @@ const Note = (props: {
     const setNote = () => {
 
         const shouldDeactivate = 
-            props.note.active && compareIndices(store.selectedInstrumentIndices, props.note.instrumentIndices) && 
-            props.note.frequency === store.selectedFrequency
+            props.note.active && compareIndices(store.selection.instrumentIndices, props.note.instrumentIndices) && 
+            props.note.frequency === store.selection.frequency
 
         props.setNote( 
             shouldDeactivate ? 
             ({active: false}) : 
-            ({active: true, frequency: store.selectedFrequency, instrumentIndices: store.selectedInstrumentIndices})
+            ({active: true, frequency: store.selection.frequency, instrumentIndices: store.selection.instrumentIndices})
         );
     }
 
