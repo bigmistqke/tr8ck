@@ -98,7 +98,6 @@ const SaveModal = (props: {setSaveMenuOpened: (boolean: boolean) => void, codeTi
 
     const [listOpened, setListOpened] = createSignal(false)
     const [codeTitle, setCodeTitle] = createSignal("default")
-
     const [saveMenuOpened, setSaveMenuOpened] = createSignal(false);
 
     const setCode = async (code: string) => {
@@ -106,9 +105,11 @@ const SaveModal = (props: {setSaveMenuOpened: (boolean: boolean) => void, codeTi
         actions.setInstrument(i,j, produce((instrument) => (instrument as SynthType).code = code))
     }
 
-    const setNode = async (code: string) => {
+    const setNode = async () => {
+        if(!store.context || !props.instrument.code) return;
+
         const [i,j] = store.selection.instrumentIndices
-        const node = await actions.getNode(code)
+        const node = await actions.createFaustNode(props.instrument.code)
 
         if(!node) {
           setStore("instruments", i, j, "error", "can not compile")
@@ -123,13 +124,7 @@ const SaveModal = (props: {setSaveMenuOpened: (boolean: boolean) => void, codeTi
         setStore("instruments", i, j, "error", undefined)
     }
 
-    createEffect(() => {
-        if(store.context && props.instrument.code)
-            setNode(props.instrument.code);
-    })
-
-    
-
+    createEffect(setNode)
 
     return (
     <>

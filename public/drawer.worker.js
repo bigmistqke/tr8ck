@@ -44,7 +44,7 @@ const WaveDrawer = function(){
   }
 
   this.drawWaveformToCanvas = (width) => {
-    console.time("draw_wave");
+    // console.time("draw_wave");
     
     if(!this.waveform || !this.context) return;
 
@@ -78,7 +78,11 @@ const WaveDrawer = function(){
     this.context.fillStyle = "white";
     this.context.fill();
     
-    console.timeEnd("draw_wave");
+    // console.timeEnd("draw_wave");
+  }
+
+  this.clear = () => {
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 }
 
@@ -103,7 +107,9 @@ self.onmessage = function(ev) {
   if(ev.data.msg === "render") {
     width = ev.data.width;
     drawer.drawWaveformToCanvas(width);
-    drawer.drawWaveformToCanvas(width);
+  }
+  if(ev.data.msg === "clear") {
+    drawer.clear();
   }
 /*   if(ev.data.msg === "pan") {
     pan = ev.data.pan;

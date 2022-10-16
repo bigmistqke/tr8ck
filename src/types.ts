@@ -17,6 +17,8 @@ export interface Sampler extends InstrumentBase {
       start: number
       end: number
     }
+    waveform: Waveform
+    audioBuffer: AudioBuffer
     speed: number
     node?: undefined
     error?: undefined
@@ -29,7 +31,7 @@ export interface Synth extends InstrumentBase {
 }
 export type Instrument = Sampler | Synth 
 
-export type getNode = (code: string) => Promise<Faust2WebAudio.FaustAudioWorkletNode | undefined>
+export type createFaustNode = (code: string) => Promise<Faust2WebAudio.FaustAudioWorkletNode | undefined>
   
 export   interface ActiveNote  {
   active: true

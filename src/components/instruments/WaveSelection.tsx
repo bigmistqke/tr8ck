@@ -1,0 +1,118 @@
+import { onMount, createSignal, createEffect, batch, onCleanup } from "solid-js"
+import cursorEventHandler from "../../helpers/cursorEventHandler"
+import { actions, store } from "../../Store"
+import { Sampler } from "../../types"
+
+export default (props: {
+  canvas: HTMLCanvasElement
+  instrument: Sampler
+}) => {
+  const [start, setStart] = createSignal<number>(0)
+  const [end, setEnd] = createSignal<number>(0)
+  const [dragging, setDragging] = createSignal<"start"|"end"|undefined>()
+
+  let dom: HTMLDivElement;
+
+  const init = ()=> {
+    window.addEventListener("resize", resize)
+  }
+
+  const cleanup = () => {
+    window.removeEventListener("resize", resize)
+  }
+
+  const resize = () => {
+    batch(() => {
+      calculateOffset("start");
+      calculateOffset("end");
+    })
+  }
+
+  const calculateOffset = (type: "start" | "end") => {
+    if(!props.canvas || !props.instrument.waveform) return;
+    const value = (props.instrument.navigation.start - props.instrument.selection[type]) 
+      * props.canvas.offsetWidth / (props.instrument.waveform.length - props.instrument.navigation.start - props.instrument.navigation.end);
+    type === "start" 
+      ? setStart(value)
+      : setEnd(value )
+  }
+
+  const calculateSelection = async (e: MouseEvent, type: "start" | "end") => {
+    if(e.button === 1) return
+    setDragging(type);
+    if(store.keys.shift) return;
+    if(!props.canvas || !props.instrument.waveform) return;
+    let x: number = 0, 
+        deltaX: number = 0;
+    
+    const ratio = props.canvas.width  / (props.instrument.waveform.length - props.instrument.navigation.start - props.instrument.navigation.end);
+
+    await cursorEventHandler(({clientX}) => {
+      if(x){
+        deltaX = (x - clientX);
+        deltaX = deltaX / ratio;
+        actions.setSamplerSelection(type, value => {
+          value = value - deltaX;
+          if(type === "start"){
+            value = Math.max(0, value);
+            value = Math.min(props.instrument.selection.end, value);
+          }else{
+            value = Math.max(props.instrument.selection.start, value);
+            value = Math.min(props.instrument.waveform.length, value);
+          }
+          return value
+        });
+      }
+      x = clientX;
+    })
+
+    setDragging(undefined);
+  }
+
+  const clearSelection = () => {
+    if(props.instrument.waveform) return;
+    setStart(0)
+    setEnd(props.canvas.offsetWidth * -1)
+  }
+
+
+  onMount(init)
+  onCleanup(cleanup)
+
+  createEffect(() => calculateOffset("start"))
+  createEffect(() => calculateOffset("end"))
+  createEffect(clearSelection)
+
+  return (
+    <div class="absolute w-full h-full">
+      <div
+        class="absolute z-10 h-full overflow-hidden select-none" 
+        style={{
+          left: start() * -1 +"px",
+          right: (props.canvas.offsetWidth + end()) + "px"
+        }}
+      >
+        <div 
+          class={`absolute h-full w-8 select-none transition-opacity  hover:bg-gradient-to-r from-white to-transparent hover:opacity-70 z-40 cursor-ew-resize ${
+            dragging() === "start" ? "bg-gradient-to-r opacity-50" : "opacity-0"
+          }`} 
+          style={{
+            left: "0px"
+          }}
+          onmousedown={e => calculateSelection(e, "start")}
+          ref={dom!}
+        />
+        <div 
+          class={`absolute h-full w-8 select-none transition-opacity  hover:bg-gradient-to-l from-white to-transparent hover:opacity-70 z-40 cursor-ew-resize ${
+            dragging() === "end" ? "bg-gradient-to-l opacity-50" : "opacity-0"
+          }`}
+          style={{
+            right: "0px"
+          }}
+          onmousedown={e => calculateSelection(e, "end")}
+        />
+         <div class="h-full w-full bg-white opacity-50 "/>
+      </div>
+    </div>
+  )
+}

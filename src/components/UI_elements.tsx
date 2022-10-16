@@ -10,7 +10,7 @@ const Button = (props: {
     return <button
         onclick={props.onclick}
         onmousedown={props.onmousedown}
-        class={`flex-1 rounded-xl h-16 text-xl uppercase bg-default-500 bg-white hover:bg-black hover:text-white ${props.class || ""}`}
+        class={`flex-1 rounded-xl h-12 text-xl uppercase bg-default-500 bg-white hover:bg-black hover:text-white ${props.class || ""}`}
         style={props.style}
     >
         {props.children}
@@ -40,7 +40,7 @@ const Block = (props: {
 }
 
 const Bar = (props: {onclick?: (e: Event) => void, children?: JSXElement[] | JSXElement, class?: string, style?: {[key: string]: string}}) => 
-    <Block class="h-16 items-center" style={props.style}>
+    <Block class="h-12 items-center" style={props.style}>
         {props.children}
     </Block>
 

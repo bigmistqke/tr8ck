@@ -2,7 +2,7 @@ import { createEffect, createSignal, For, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 
 import "./App.css"
-import { setupAudio } from "./setupAudio"
+import { setupAudio } from "./getWebAudioMediaStream"
 
 import Faust2WebAudio, { Faust } from "faust2webaudio"
 const code = `
