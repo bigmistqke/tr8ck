@@ -162,7 +162,7 @@ const collectParameters = (node: FaustAudioWorkletNode) => {
     if("items" in node){
       node.items.forEach(item => walk(item))
     }else{
-      console.log(node);
+      // console.log(node);
       if(!("step" in node) || fals(node.step) || !("init" in node) || fals(node.init)) {
         console.error('this parameter is an output parameter?', node);
         return;
@@ -265,6 +265,8 @@ const initInstruments = async () => {
         fxChain: [],
         speed: 1
       })
+
+      console.log()
     }
   }
 }

@@ -1,24 +1,42 @@
 import { JSXElement } from "solid-js";
 
+
 const Button = (props: {
+  onclick?: (e: MouseEvent) => void, 
+  onmousedown?: (e: MouseEvent) => void,
+  children?: JSXElement[] | JSXElement, 
+  class?: string, 
+  style?: {[key: string]: string}
+}) => {
+  return <button
+  onclick={props.onclick}
+  onmousedown={props.onmousedown}
+  class={`flex-1 rounded-xl text-sm uppercase bg-default-500 bg-white hover:bg-black hover:text-white ${props.class || ""}`}
+  style={props.style}
+>
+  {props.children}
+</button>
+}
+
+const ButtonBar = (props: {
     onclick?: (e: MouseEvent) => void, 
     onmousedown?: (e: MouseEvent) => void,
     children?: JSXElement[] | JSXElement, 
     class?: string, 
     style?: {[key: string]: string}
 }) => {
-    return <button
+    return <Button
         onclick={props.onclick}
         onmousedown={props.onmousedown}
-        class={`flex-1 rounded-xl h-12 text-xl uppercase bg-default-500 bg-white hover:bg-black hover:text-white ${props.class || ""}`}
+        class={`h-10 text-sm ${props.class || ""}`}
         style={props.style}
     >
         {props.children}
-    </button>
+    </Button>
 }
 
+
 const Block = (props: {
-    onclick?: (e: Event) => void
     onmouseup?: (e: MouseEvent) => void
     onmousemove?: (e: MouseEvent) => void
     onmousedown?: (e: MouseEvent) => void
@@ -39,9 +57,23 @@ const Block = (props: {
     </div>
 }
 
-const Bar = (props: {onclick?: (e: Event) => void, children?: JSXElement[] | JSXElement, class?: string, style?: {[key: string]: string}}) => 
-    <Block class={`${props.class} h-12 items-center justify-center content-center text-xl `} style={props.style}>
+const Bar = (props: {
+  onmouseup?: (e: MouseEvent) => void
+  onmousemove?: (e: MouseEvent) => void
+  onmousedown?: (e: MouseEvent) => void
+  onwheel?: (e: WheelEvent) => void
+  children?: JSXElement[] | JSXElement, class?: string, 
+  style?: {[key: string]: string}}
+) => 
+    <Block 
+      onmousedown={props.onmousedown}
+      onmousemove={props.onmousemove}
+      onmouseup={props.onmouseup}
+      onwheel={props.onwheel}
+      class={`${props.class} h-10 items-center justify-center content-center text-sm`} 
+      style={props.style}
+    >
         {props.children}
     </Block>
 
-export {Button, Bar, Block};
+export {Button, ButtonBar, Bar, Block};

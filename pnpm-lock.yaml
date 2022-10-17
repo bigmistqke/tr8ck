@@ -4,11 +4,12 @@ specifiers:
   '@formkit/auto-animate': 1.0.0-beta.3
   '@thisbeyond/solid-dnd': ^0.7.1
   autoprefixer: ^10.4.12
+  deep-clone: ^3.0.3
   fals: ^1.0.5
   faust2webaudio: github:grame-cncm/faust2webaudio
   postcss: ^8.4.17
   randomcolor: ^0.6.2
-  solid-js: ^1.5.1
+  solid-js: ^1.5.8
   tailwindcss: ^3.1.8
   typescript: ^4.8.2
   vite: ^3.0.9
@@ -21,10 +22,11 @@ specifiers:
 
 dependencies:
   '@formkit/auto-animate': 1.0.0-beta.3
-  '@thisbeyond/solid-dnd': 0.7.1_solid-js@1.5.1
+  '@thisbeyond/solid-dnd': 0.7.1_solid-js@1.5.8
+  deep-clone: 3.0.3
   fals: 1.0.5
   randomcolor: 0.6.2
-  solid-js: 1.5.1
+  solid-js: 1.5.8
   waveform-data: 4.3.0
   wavesurfer.js: 6.3.0
   worktank: 2.3.0
@@ -38,7 +40,7 @@ devDependencies:
   tailwindcss: 3.1.8_postcss@8.4.17
   typescript: 4.8.2
   vite: 3.0.9
-  vite-plugin-solid: 2.3.0_solid-js@1.5.1+vite@3.0.9
+  vite-plugin-solid: 2.3.0_solid-js@1.5.8+vite@3.0.9
 
 packages:
 
@@ -420,12 +422,12 @@ packages:
       fastq: 1.13.0
     dev: true
 
-  /@thisbeyond/solid-dnd/0.7.1_solid-js@1.5.1:
+  /@thisbeyond/solid-dnd/0.7.1_solid-js@1.5.8:
     resolution: {integrity: sha512-+hlm84MfCNtZOi12tUf0WL2aBYyIhOCTA+lbT3hiJXmVnMRws0Rq1Y6WjQ5A43Xn/gvzzO9K7O+WK+t9UHTR4Q==}
     peerDependencies:
       solid-js: ^1.5
     dependencies:
-      solid-js: 1.5.1
+      solid-js: 1.5.8
     dev: false
 
   /acorn-node/1.8.2:
@@ -600,8 +602,8 @@ packages:
     hasBin: true
     dev: true
 
-  /csstype/3.1.0:
-    resolution: {integrity: sha512-uX1KG+x9h5hIJsaKR9xHUeUraxf8IODOwq9JLNPq6BwB04a/xgpq3rcx47l5BZu5zBPlgD342tdke3Hom/nJRA==}
+  /csstype/3.1.1:
+    resolution: {integrity: sha512-DJR/VvkAvSZW9bTouZue2sSxDwdTN92uHjqeKVm+0dAqdfNykRzQ95tay8aXMBAAPpUiq4Qcug2L7neoRh2Egw==}
 
   /debug/4.3.4:
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
@@ -614,6 +616,10 @@ packages:
     dependencies:
       ms: 2.1.2
     dev: true
+
+  /deep-clone/3.0.3:
+    resolution: {integrity: sha512-6jtXIlCBAwr3GP/7Il52clbIFIKAxg/pnNkL4/sE6+Oqb10MXMtm9LDZV2IAuwdaKV9VBm8hlxAFk9r6pF8XRw==}
+    dev: false
 
   /defined/1.0.0:
     resolution: {integrity: sha512-Y2caI5+ZwS5c3RiNDJ6u53VhQHv+hHKwhkI1iHvceKUHw9Df6EK2zRLfjejRgMuCuxK7PfSWIMwWecceVvThjQ==}
@@ -1196,12 +1202,12 @@ packages:
     hasBin: true
     dev: true
 
-  /solid-js/1.5.1:
-    resolution: {integrity: sha512-Y6aKystIxnrB0quV5nhqNuJV+l2Fk3/PQy1mMya/bzxlGiMHAym7v1NaqEgqDIvctbkxOi5dBj0ER/ewrH060g==}
+  /solid-js/1.5.8:
+    resolution: {integrity: sha512-Rm7A8msFxSQCUXMzn1YSV+y1Gavy/66s8wp52Cz9nVgsO1JYDAqbp33V4Kg8aMJZZCYhEwgHxsg8JxgIFmwouw==}
     dependencies:
-      csstype: 3.1.0
+      csstype: 3.1.1
 
-  /solid-refresh/0.4.1_solid-js@1.5.1:
+  /solid-refresh/0.4.1_solid-js@1.5.8:
     resolution: {integrity: sha512-v3tD/OXQcUyXLrWjPW1dXZyeWwP7/+GQNs8YTL09GBq+5FguA6IejJWUvJDrLIA4M0ho9/5zK2e9n+uy+4488g==}
     peerDependencies:
       solid-js: ^1.3
@@ -1209,7 +1215,7 @@ packages:
       '@babel/generator': 7.18.7
       '@babel/helper-module-imports': 7.18.6
       '@babel/types': 7.18.8
-      solid-js: 1.5.1
+      solid-js: 1.5.8
     dev: true
 
   /source-map-js/1.0.2:
@@ -1320,7 +1326,7 @@ packages:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
     dev: true
 
-  /vite-plugin-solid/2.3.0_solid-js@1.5.1+vite@3.0.9:
+  /vite-plugin-solid/2.3.0_solid-js@1.5.8+vite@3.0.9:
     resolution: {integrity: sha512-N2sa54C3UZC2nN5vpj5o6YP+XdIAZW6n6xv8OasxNAcAJPFeZT7EOVvumL0V4c8hBz1yuYniMWdESY8807fVSg==}
     peerDependencies:
       solid-js: ^1.3.17
@@ -1330,8 +1336,8 @@ packages:
       '@babel/preset-typescript': 7.18.6_@babel+core@7.18.6
       babel-preset-solid: 1.4.6_@babel+core@7.18.6
       merge-anything: 5.0.2
-      solid-js: 1.5.1
-      solid-refresh: 0.4.1_solid-js@1.5.1
+      solid-js: 1.5.8
+      solid-refresh: 0.4.1_solid-js@1.5.8
       vite: 3.0.9
     transitivePeerDependencies:
       - supports-color

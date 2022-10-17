@@ -19,9 +19,9 @@ export interface Sampler extends InstrumentBase {
       start: number
       end: number
     }
-    waveform: Waveform
-    audioBuffer: AudioBuffer
     speed: number
+    waveform?: Waveform
+    audioBuffer?: AudioBuffer
     node?: undefined
     error?: undefined
 }
@@ -71,4 +71,16 @@ export interface FxParameter {
   max: number
   min: number
   step: number
+}
+
+export interface Track {
+  source?: AudioBufferSourceNode 
+  pitch: number
+  selected: boolean
+  fxChain: {
+    name: string, 
+    node: FaustAudioWorkletNode,
+    parameters: FxParameter[]
+  }[]
+  pitchshifter?: FaustAudioWorkletNode
 }

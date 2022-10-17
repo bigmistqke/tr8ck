@@ -2,9 +2,9 @@ import { FaustAudioWorkletNode } from "faust2webaudio"
 import { For } from "solid-js"
 import { createStore } from "solid-js/store"
 import cursorEventHandler from "../helpers/cursorEventHandler"
-import { store } from "../Store"
+import { actions, store } from "../Store"
 import { FxParameter } from "../types"
-import { Block } from "./UI_elements"
+import { Block, Button } from "./UI_elements"
 
 const Parameter = (props: {parameter: FxParameter, node: FaustAudioWorkletNode}) => {
   const [_, setParameter] = createStore<FxParameter>(props.parameter);
@@ -45,7 +45,7 @@ const Parameter = (props: {parameter: FxParameter, node: FaustAudioWorkletNode})
         }}
       />
     </button>
-    <span class="normal-case select-none" style={{"font-size": "8pt",}}>{props.parameter.label}</span>
+    <span class="flex-1 flex items-end self-center normal-case select-none" style={{"font-size": "8pt",}}>{props.parameter.label}</span>
   </div>
 }
 
@@ -71,7 +71,16 @@ export default () => {
       <div class="flex gap-2 w-full h-2 mb-2 overflow-hidden">
         <For each={store.tracks}>
           {
-            (track, index) => <Block class={`${store.selection.track === index() ? "bg-black" : "bg-white"} flex-1 h-full`}/>
+            (track, index) => (
+              <Button 
+                class={`${
+                  store.selection.track === index() 
+                  ? "bg-black" 
+                  : "bg-white"
+                } flex-1 h-full`}
+                // onclick={() => actions.setSelectedTrack(index())}
+              />
+            )
           }
         </For>
       </div>

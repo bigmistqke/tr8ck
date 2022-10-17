@@ -4,7 +4,7 @@ import SynthUI from "./Synth"
 import { Sampler, Synth } from "../../types"
 import { actions, store } from "../../Store"
 import InstrumentSelection from "./InstrumentSelection"
-import { Button } from "../UI_elements"
+import {  ButtonBar } from "../UI_elements"
 
 export type Instrument = Sampler | Synth 
 
@@ -16,6 +16,7 @@ const Instrument = () => {
         const i = actions.getSelectedInstrument();
         return i.active ? i.type : undefined
     }
+    
     return (
         <div class="flex flex-1 flex-col gap-2">
             <div class="flex flex-1 flex-col gap-2">
@@ -25,8 +26,8 @@ const Instrument = () => {
                             {indices[0]} : {indices[1]}
                         </span>
                     </div>
-                    <Button class="flex-1 text-center bg-white" onclick={actions.toggleTypeSelectedInstrument}>{type()?.toUpperCase()}</Button>
-                    <Button class="flex-1 text-center bg-white" onclick={actions.toggleTypeSelectedInstrument}>composition</Button>
+                    <ButtonBar class="flex-1 text-center bg-white" onclick={actions.toggleTypeSelectedInstrument}>{type()?.toUpperCase()}</ButtonBar>
+                    <ButtonBar class="flex-1 text-center bg-white" onclick={actions.toggleTypeSelectedInstrument}>composition</ButtonBar>
                 </div>
                 <Switch fallback={<>error type of instrument is undefined</>}>
                     <Match when={type() === "sampler"}>

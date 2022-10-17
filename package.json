@@ -22,9 +22,10 @@
   "dependencies": {
     "@formkit/auto-animate": "1.0.0-beta.3",
     "@thisbeyond/solid-dnd": "^0.7.1",
+    "deep-clone": "^3.0.3",
     "fals": "^1.0.5",
     "randomcolor": "^0.6.2",
-    "solid-js": "^1.5.1",
+    "solid-js": "^1.5.8",
     "waveform-data": "^4.3.0",
     "wavesurfer.js": "^6.3.0",
     "worktank": "^2.3.0",

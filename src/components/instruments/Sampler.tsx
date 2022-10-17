@@ -3,7 +3,7 @@ import arrayBufferToWaveform from "../../helpers/arrayBufferToWaveform"
 import fileToArrayBuffer from "../../helpers/fileToArrayBuffer"
 import { actions, setStore, store } from "../../Store"
 import { Sampler } from "../../types"
-import { Button } from "../UI_elements"
+import { Button, ButtonBar } from "../UI_elements"
 import WaveVisualizer from "./WaveVisualizer"
 
 const SamplerUI = () => {
@@ -35,7 +35,7 @@ const SamplerUI = () => {
         <WaveVisualizer instrument={instrument()} />
         <div class="flex gap-5">
             <input type="file" ref={input!} oninput={uploadFile} hidden/>
-            <Button onclick={() => input.click()}>load sample</Button>
+            <ButtonBar onclick={() => input.click()}>load sample</ButtonBar>
         </div>
       </>
   )
