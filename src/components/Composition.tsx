@@ -158,7 +158,7 @@ const Macro = () => {
 
     return <div class="flex-1 flex gap-2 m-2 overflow-hidden">
         <div class="flex flex-col flex-1 overflow-hidden">
-            <Bar class="mb-2 flex-grow-0 flex-auto">patterns</Bar>
+            {/* <Bar class="mb-2 flex-grow-0 flex-auto">patterns</Bar> */}
             <div class="flex flex-1 overflow-hidden rounded-xl">
                 <div class="flex-1 overflow-auto bg-white p-2" ref={patternRef}>
                     <For each={store.patterns} >
@@ -182,7 +182,7 @@ const Macro = () => {
             
         </div>
         <div class="flex flex-col flex-1 overflow-auto" >
-            <Bar class="mb-2 flex-grow-0 flex-auto">composition</Bar>
+            {/* <Bar class="mb-2 flex-grow-0 flex-auto">composition</Bar> */}
             <div class="flex flex-1 overflow-hidden rounded-xl">
                 <div 
                     ref={compositionRef}

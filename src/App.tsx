@@ -1,19 +1,14 @@
-import { createEffect, onCleanup, onMount, Show } from "solid-js"
-import  { Faust } from "faust2webaudio"
-
-import { getWebAudioMediaStream } from "./getWebAudioMediaStream"
-import {  ROOT_FREQUENCY } from "./constants"
+import { createEffect, onCleanup, onMount } from "solid-js"
 import {store, setStore, actions} from "./Store"
-
 
 import Piano from "./components/Piano"
 import InstrumentUI from "./components/instruments/Instrument"
-import MicroMacro from "./components/MicroMacro"
+import Patterns from "./components/Patterns"
 
-import "./App.css"
 import { Instrument } from "./types"
 import mtof from "./helpers/mtof"
 
+import "./App.css"
 
 function App() {
   const clock = () => {
@@ -62,7 +57,7 @@ function App() {
           frequency={store.selection.frequency}
           setKey={(key) => setStore("selection", "frequency", mtof(key))}
         />
-        <MicroMacro/>
+        <Patterns/>
       </div>
       <div class="flex flex-1 flex-col h-full p-2 gap-4">
         <InstrumentUI />

@@ -21,7 +21,8 @@ g = t,1 : min;
 t = button("drop");
 `
 
-const PITCHSHIFTER = `declare name 		"pitchShifter";
+const PITCHSHIFTER = 
+`declare name 		"pitchShifter";
 declare version 	"1.0";
 declare author 		"Grame";
 declare license 	"BSD";
@@ -33,22 +34,35 @@ declare copyright 	"(c)GRAME 2006";
  
 import("stdfaust.lib");
 
-pitchshifter = vgroup(
-                    "Pitch Shifter", 
-                    ef.transpose(
-                        hslider("window (samples)", 1000, 50, 10000, 1),
-                        hslider("xfade (samples)", 10, 1, 10000, 1),
-                        hslider("shift (semitones)", 0, -36, +36, 0.1)
-                    )
-                );
+pitchshifter = 
+  vgroup(
+    "Pitch Shifter", 
+    ef.transpose(
+        hslider("window", 1000, 50, 10000, 1) : si.smoo,
+        hslider("xfade", 10, 1, 10000, 1) : si.smoo,
+        hslider("shift", 0, -36, +36, 0.1) : si.smoo
+    )
+  );
 
 process = pitchshifter;`
 
+const REVERB = 
+`declare name "freeverb";
+declare version "0.0";
+declare author "RM";
+declare description "Freeverb demo application.";
+
+import("stdfaust.lib");
+
+process = dm.freeverb_demo;`
+
+
 export {
-    ROOT_FREQUENCY,
-    INSTRUMENT_AMOUNT,
-    SEQUENCE_AMOUNT,
-    SEQUENCE_LENGTH,
-    DEFAULT_CODE,
-    PITCHSHIFTER
+  ROOT_FREQUENCY,
+  INSTRUMENT_AMOUNT,
+  SEQUENCE_AMOUNT,
+  SEQUENCE_LENGTH,
+  DEFAULT_CODE,
+  PITCHSHIFTER,
+  REVERB
 }

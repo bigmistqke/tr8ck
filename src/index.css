@@ -21,10 +21,10 @@ input, textarea{
 
 * {
   scrollbar-width: thin; /* "auto" or "thin" */
-  scrollbar-color: white rgba(0,0,0,0); /* scroll thumb and track */
+  scrollbar-color: rgb(107, 107, 107) white; /* scroll thumb and track */
 }
 
-::-webkit-scrollbar {
+/* ::-webkit-scrollbar {
   height: 12px;
   width: 6px;
   background: rgba(0,0,0,0);
@@ -36,4 +36,4 @@ input, textarea{
 
 ::-webkit-scrollbar-corner {
   background: rgba(0,0,0,0);
-}
+} */

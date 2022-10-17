@@ -28,7 +28,7 @@ const Block = (props: {
     style?: {[key: string]: string}
 }) => {
     return <div
-        class={`flex flex-1 rounded-xl overflow-hidden text-xl uppercase justify-center content-center bg-white  ${props.class || ""}`}
+        class={`${props.class || ""} flex-1 rounded-xl uppercase`}
         style={props.style}
         onmousedown={props.onmousedown}
         onmousemove={props.onmousemove}
@@ -40,7 +40,7 @@ const Block = (props: {
 }
 
 const Bar = (props: {onclick?: (e: Event) => void, children?: JSXElement[] | JSXElement, class?: string, style?: {[key: string]: string}}) => 
-    <Block class="h-12 items-center" style={props.style}>
+    <Block class={`${props.class} h-12 items-center justify-center content-center text-xl `} style={props.style}>
         {props.children}
     </Block>
 

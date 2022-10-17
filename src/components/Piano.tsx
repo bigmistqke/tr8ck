@@ -21,7 +21,7 @@ export default function(props: {frequency: number, setKey: (key: number) => void
       const frequency = mtof(midi)
       return props.frequency === frequency 
     }
-    return <div class="flex flex-col w-32 mr-2">
+    return <div class="flex flex-col w-32 mr-2 flex-col-reverse">
       <For each={new Array(12 * 6).fill(0)}>
         {
           (_,index) => <div class="flex flex-1">

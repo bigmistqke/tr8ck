@@ -124,14 +124,14 @@ const WaveVisualizer = (props: {
   return (
     <div class="h-64 flex">
       <Block 
-        class="relative bg-selected flex-1" 
+        class="relative bg-selected flex-1 overflow-hidden" 
         onwheel={(e) => {console.log("onwheel", e)}}
         onmousedown={mousedown}
       >
         <canvas 
           id={id} 
           ref={canvas!} 
-          class="flex-1 pt-5 pb-5 max-w-full"
+          class="flex-1 pt-5 pb-5 w-full"
         />
         <WaveSelection 
           canvas={canvas!} 

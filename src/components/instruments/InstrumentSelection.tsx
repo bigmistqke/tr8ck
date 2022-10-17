@@ -9,18 +9,17 @@ const InstrumentSelection = () => {
       return i === indices[0] && j === indices[1]
     } 
     return (
-        <div class="flex flex-col  gap-4">
+        <div class="flex flex-col flex-1 gap-2 justify-end">
             <For each={store.instruments}>
                 {(row, i) => (
-                <div class="flex flex-1 gap-4">
+                <div class="flex gap-2">
                     <For each={row}>
                     {
-                    (instrument, j) => 
-                        { 
-                            return (
+                        (instrument, j) => 
+                            (
                                 <button
-                                    onclick={() => actions.setSelectedInstrumentIndices(i(), j())}
-                                    class={`flex-1 flex h-12` }
+                                  onclick={() => actions.setSelectedInstrumentIndices(i(), j())}
+                                  class={`flex-1 flex h-12` }
                                 >
                                     <div 
                                         class={`flex flex-1 h-full rounded-xl justify-center items-center text-xl ${
@@ -36,20 +35,6 @@ const InstrumentSelection = () => {
                                     </div>
                                 </button>
                             )
-                        }
-
-                            /* return <Button 
-                                class={isSelected([i(), j()]) 
-                                    ? "border-8 border-white" 
-                                    : "hover:border-8 hover:border-white"
-                                }
-                                style={{"background": instrument.active ? instrument.color : "black"}}
-                            >
-                                <span>
-                                {i()} : {j()}
-                                </span>
-                            </Button> 
-                        }*/
                     }
                     </For>
                 </div>

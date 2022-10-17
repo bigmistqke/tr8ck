@@ -9,7 +9,7 @@ export default (props: {
 }) => {
   const [start, setStart] = createSignal<number>(0)
   const [end, setEnd] = createSignal<number>(0)
-  const [dragging, setDragging] = createSignal<"start"|"end"|undefined>()
+  const [dragging, setDragging] = createSignal<"start"|"end"|"both"|undefined>()
 
   let dom: HTMLDivElement;
 
@@ -37,8 +37,23 @@ export default (props: {
       : setEnd(value )
   }
 
-  const calculateSelection = async (e: MouseEvent, type: "start" | "end") => {
+  const translateHandle = (type: "start"|"end", delta: number) => {
+    actions.setSamplerSelection(type, value => {
+      value = value - delta;
+      if(type === "start"){
+        value = Math.max(0, value);
+        value = Math.min(props.instrument.selection.end, value);
+      }else{
+        value = Math.max(props.instrument.selection.start, value);
+        value = Math.min(props.instrument.waveform.length, value);
+      }
+      return value
+    });
+  }
+
+  const calculateSelection = async (e: MouseEvent, type: "start" | "end" | "both") => {
     if(e.button === 1) return
+    e.stopPropagation();
     setDragging(type);
     if(store.keys.shift) return;
     if(!props.canvas || !props.instrument.waveform) return;
@@ -51,17 +66,12 @@ export default (props: {
       if(x){
         deltaX = (x - clientX);
         deltaX = deltaX / ratio;
-        actions.setSamplerSelection(type, value => {
-          value = value - deltaX;
-          if(type === "start"){
-            value = Math.max(0, value);
-            value = Math.min(props.instrument.selection.end, value);
-          }else{
-            value = Math.max(props.instrument.selection.start, value);
-            value = Math.min(props.instrument.waveform.length, value);
-          }
-          return value
-        });
+        if(type === "both" || store.keys.control){
+          translateHandle("start", deltaX);
+          translateHandle("end", deltaX);
+        }else{
+          translateHandle(type, deltaX);
+        }
       }
       x = clientX;
     })
@@ -84,13 +94,14 @@ export default (props: {
   createEffect(clearSelection)
 
   return (
-    <div class="absolute w-full h-full">
+    <div class="absolute w-full h-full top-0">
       <div
-        class="absolute z-10 h-full overflow-hidden select-none" 
+        class="absolute z-10 h-full overflow-hidden select-none cursor-move" 
         style={{
           left: start() * -1 +"px",
           right: (props.canvas.offsetWidth + end()) + "px"
         }}
+        onmousedown={e => calculateSelection(e, "both")}
       >
         <div 
           class={`absolute h-full w-8 select-none transition-opacity  hover:bg-gradient-to-r from-white to-transparent hover:opacity-70 z-40 cursor-ew-resize ${

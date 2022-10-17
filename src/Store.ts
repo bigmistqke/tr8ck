@@ -1,15 +1,13 @@
-import Faust2WebAudio, { Faust } from "faust2webaudio"
+import Faust2WebAudio, { Faust, FaustAudioWorkletNode } from "faust2webaudio"
 import { createStore, produce, StoreSetter } from "solid-js/store"
-import { SEQUENCE_AMOUNT, SEQUENCE_LENGTH, INSTRUMENT_AMOUNT, DEFAULT_CODE, PITCHSHIFTER, ROOT_FREQUENCY } from "./constants"
-import { Indices, Note, Instrument, Inactive, Pattern, Waveform, Sampler } from "./types"
+import { SEQUENCE_AMOUNT, SEQUENCE_LENGTH, INSTRUMENT_AMOUNT, DEFAULT_CODE, PITCHSHIFTER, ROOT_FREQUENCY, REVERB } from "./constants"
+import { Indices, Note, Inactive, Pattern, Waveform, FxParameter, Instrument } from "./types"
 import randomColor from "randomColor";
 import zeptoid from "zeptoid";
 import getLocalPosition from "./helpers/getLocalPosition";
-import Instrument from "./components/instruments/Instrument";
-import Instrument from "./components/instruments/Instrument";
-import Instrument from "./components/instruments/Instrument";
-import mtof from "./helpers/mtof";
 import ftom from "./helpers/ftom";
+import { TFaustUIItem, TFaustUIGroup, FaustScriptProcessorNode } from "faust2webaudio/src/types";
+import fals from "fals"
 
 const initSequence = () : Note[] => 
   Array(SEQUENCE_LENGTH)
@@ -34,8 +32,17 @@ const [store, setStore] = createStore<{
   clockOffset: number
   bpm: number
   patterns: Pattern[]
-  tracks: AudioBufferSourceNode[]
-  fx: Faust2WebAudio.FaustAudioWorkletNode[]
+  tracks: {
+    source?: AudioBufferSourceNode 
+    pitch: number
+    selected: boolean
+    fxChain: {
+      name: string, 
+      node: Faust2WebAudio.FaustAudioWorkletNode,
+      parameters: FxParameter[]
+    }[]
+    pitchshifter: Faust2WebAudio.FaustAudioWorkletNode
+  }[]
   composition: ({id: string, patternId: string})[]
   instruments: (Instrument)[][]
   selection: {
@@ -43,9 +50,11 @@ const [store, setStore] = createStore<{
     instrumentIndices: Indices
     patternId: string
     blockId?: string
+    track: number
   },
   keys: {
     shift: boolean,
+    control: boolean
   }
 }>({
   clock: -1,
@@ -56,8 +65,11 @@ const [store, setStore] = createStore<{
   bpm: 120,
   patterns: [initPattern()],
   composition: [],
-  tracks: Array(SEQUENCE_AMOUNT).fill(undefined),
-  fx: Array(SEQUENCE_AMOUNT).fill(undefined),
+  tracks: Array(SEQUENCE_AMOUNT).fill({
+    instrument: undefined,
+    pitch: 0,
+    fxChain: []
+  }),
   instruments: Array(INSTRUMENT_AMOUNT)
     .fill(0)
     .map(() =>
@@ -69,7 +81,9 @@ const [store, setStore] = createStore<{
           code: "",
           node: undefined,
           color: "",
-          pan: 0
+          pan: 0,
+          fxChain: [],
+          speed: 1
         })
     )
   ),
@@ -77,10 +91,12 @@ const [store, setStore] = createStore<{
     frequency: ROOT_FREQUENCY,
     instrumentIndices: [0,0],
     patternId: "first",
-    blockId: undefined
+    blockId: undefined,
+    track: 0
   },
   keys: {
-    shift: false
+    shift: false,
+    control: false
   }
 })
 
@@ -102,17 +118,25 @@ const initKeyboard = () => {
   window.onkeydown = (e) => {
     switch(e.code){
       case "ShiftLeft":
-        setStore("keys", "shift", true);
       case "ShiftRight":
         setStore("keys", "shift", true);
+        break;
+      case "ControlLeft":
+      case "ControlRight":
+        setStore("keys", "control", true);
+        break;
     }
   }
   window.onkeyup = (e) => {
     switch(e.code){
       case "ShiftLeft":
-        setStore("keys", "shift", false);
       case "ShiftRight":
         setStore("keys", "shift", false);
+        break;
+      case "ControlLeft":
+      case "ControlRight":
+        setStore("keys", "control", false);
+        break; 
     }
   }
 }
@@ -131,25 +155,98 @@ const createFaustNode = async (code: string) : Promise<Faust2WebAudio.FaustAudio
 const setSelectedInstrumentIndices = (i: number, j: number) => setStore("selection", "instrumentIndices", [i, j])
 const getSelectedInstrument = () => store.instruments[store.selection.instrumentIndices[0]][store.selection.instrumentIndices[1]]
 
-
+const collectParameters = (node: FaustAudioWorkletNode) => {
+  if(!node) return []
+  let parameters : FxParameter[] = [];
+  const walk = (node: TFaustUIItem) => {
+    if("items" in node){
+      node.items.forEach(item => walk(item))
+    }else{
+      console.log(node);
+      if(!("step" in node) || fals(node.step) || !("init" in node) || fals(node.init)) {
+        console.error('this parameter is an output parameter?', node);
+        return;
+      }
+      parameters.push({
+        address: node.address,
+        label: node.label,
+        max: node.max || 1,
+        min: node.min || 0,
+        step: node.step || 0.1,
+        value: node.init || 0.5,
+        init: node.init || 0.5
+      });
+    }
+  }
+  node.dspMeta.ui.forEach((node: TFaustUIGroup)=> walk(node))
+  return parameters;
+}
 
 const initTracks = async () => {
   console.log("initTracks");
   const pitchshifters = await Promise.all(
     store.tracks.map(async (track, i) => await createFaustNode(PITCHSHIFTER))
   )
+  console.log(pitchshifters[0] === pitchshifters[1])
+  
+  const reverbs = await Promise.all(
+    store.tracks.map(async (track, i) => await createFaustNode(REVERB))
+  )
   pitchshifters.forEach((pitchshifter, index) => {
-    if(!store.context || !pitchshifter) return;
+    const reverb = reverbs[index];
+    if(!store.context || !pitchshifter || !reverb) return;
+
+    const ps = {
+      name: "pitchshifter", 
+      node: pitchshifter, 
+      parameters: collectParameters(pitchshifter)
+    }
+    const rv = {
+      name: "reverb",
+      node: reverb,
+      parameters: collectParameters(reverb)
+    }
+
     pitchshifter.connect(store.context.destination)
-    setStore("fx", index, pitchshifter)
+    reverb.connect(pitchshifter);
+    setStore("tracks", index, "fxChain", [ps, rv]);
+    setStore("tracks", index, "pitchshifter", pitchshifter);
   })
+
+/*   setStore("tracks", 0, "pitchshifter", pitchshifters[0]);
+  setStore("tracks", 1, "pitchshifter", pitchshifters[1]); */
+/*   window.ps0 = pitchshifters[0];
+  window.ps1 = pitchshifters[1];
+  window.ps0.connect(store.context!.destination)
+  window.ps1.connect(store.context!.destination)
+
+  let ps = {
+    name: "pitchshifter", 
+    node: pitchshifters[0], 
+    parameters: collectParameters(pitchshifters[0])
+  }
+  setStore("tracks", 0, "fxChain", [ps]);
+
+  ps = {
+    name: "pitchshifter", 
+    node: pitchshifters[0], 
+    parameters: collectParameters(pitchshifters[1])
+  }
+  setStore("tracks", 1, "fxChain", [ps]); */
+
+
+  console.log(store.tracks[0].pitchshifter === store.tracks[1].pitchshifter)
+  console.log(pitchshifters[0] === store.tracks[0].pitchshifter)
+
+  console.log(store.tracks[0].pitchshifter, store.tracks[1].pitchshifter)
 }
 
 const initInstruments = async () => {
+  if(!store.context) return;
   for(let i = 0; i < INSTRUMENT_AMOUNT; i++){
     for(let j = 0; j < INSTRUMENT_AMOUNT; j++){
-      const node = await createFaustNode(DEFAULT_CODE)
-      if(!node) return
+/*       const node = await createFaustNode(DEFAULT_CODE)
+      if(!node) return */
 
       setStore("instruments", i, j, {
         active: true,
@@ -164,16 +261,10 @@ const initInstruments = async () => {
         },        
         src: undefined,
         waveform: undefined,
-        color: randomColor()
+        color: randomColor(),
+        fxChain: [],
+        speed: 1
       })
-
-/*       setStore("instruments", i, j, {
-        active: true,
-        type: "synth",
-        code: DEFAULT_CODE,
-        node: undefined,
-        color: randomColor()
-      }) */
     }
   }
 }
@@ -262,19 +353,31 @@ const getBlockIndex = (blockId: string) => store.composition.findIndex(block => 
 
 function playSampler(buffer: AudioBuffer, selection: {start: number, end: number}, track: number, frequency: number) {
   if(!store.context) return;
-  console.log(track);
-  if(store.tracks[track]){
-    store.tracks[track].stop();
+  // const source = store.tracks[track].source
+  if(store.tracks[track].source){
+    // console.log(source.track, "track")
+    store.tracks[track].source!.stop();
   }
-  var source = store.context.createBufferSource();
+  const source = store.context.createBufferSource();
   source.buffer = buffer;
-  // source.connect(store.context.destination);
-  if(store.fx[track])
-    source.connect(store.fx[track]);
+  source.track = track;
 
-  console.log(store.fx[track]); 
+  /* const fxChain = store.tracks[track].fxChain;
+  const fxEntry = fxChain[fxChain.length - 1];
+  if(fxEntry)
+    source.connect(fxEntry.node); */
 
-  setStore("tracks", track, source);
+    source.connect(store.context.destination)
+
+/*   if(track === 0){
+    console.log('this', window.ps0 === window.ps1)
+    source.connect(window.ps0)
+  }else{
+    console.log('that')
+    source.connect(window.ps1)
+  } */
+
+  setStore("tracks", track, "source", source);
 
   const duration = ((selection.end - selection.start) * 128) / buffer.length * buffer.duration;
   const start = (selection.start * 128) / buffer.length * buffer.duration;
@@ -283,9 +386,21 @@ function playSampler(buffer: AudioBuffer, selection: {start: number, end: number
   const midi = ftom(frequency);
   const semitones = midi - ftom(ROOT_FREQUENCY);
 
-  store.fx[track].setParamValue("/Pitch_Shifter/shift__semitones_", semitones)
+  console.log(track, store.tracks[0].pitchshifter === store.tracks[1].pitchshifter);
+  const fxData = store.tracks[track].fxChain.find(fx => fx.name === "pitchshifter");
+  const shift = fxData!.parameters.find(parameter =>parameter.label === "shift");
+  const value = semitones + shift!.value;
 
-  // source.playbackRate.value = frequency / 554
+  setStore("tracks", track, "pitch", semitones);
+  store.tracks[track].pitchshifter.setParamValue("/Pitch_Shifter/shift", value)
+
+/*   if(track === 0){
+    // source.connect(window.ps0)
+    window.ps0.setParamValue("/Pitch_Shifter/shift", value)
+  }else{
+    // source.connect(window.ps1)
+    window.ps1.setParamValue("/Pitch_Shifter/shift", value)
+  } */
 }
 
 const playNote = (indices: Indices, frequency: number, track: number) => {

@@ -1,9 +1,11 @@
-import Faust2WebAudio from "faust2webaudio"
+import Faust2WebAudio, { FaustAudioWorkletNode } from "faust2webaudio"
 
 interface InstrumentBase {
     active: true
     pan: number
     color: string
+    fxChain: FaustAudioWorkletNode[]
+    speed: number
 }
 
 export interface Sampler extends InstrumentBase {
@@ -59,4 +61,14 @@ export interface Waveform {
   min: number[]
   max: number[]
   length: number
+}
+
+export interface FxParameter {
+  address: string
+  label: string
+  init: number
+  value: number
+  max: number
+  min: number
+  step: number
 }
