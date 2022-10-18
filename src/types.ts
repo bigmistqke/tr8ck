@@ -1,10 +1,11 @@
 import Faust2WebAudio, { FaustAudioWorkletNode } from "faust2webaudio"
+import { TCompiledCode, TCompiledDsp } from "faust2webaudio/src/types"
 
 interface InstrumentBase {
     active: true
     pan: number
     color: string
-    fxChain: FaustAudioWorkletNode[]
+    fxChain: Fx[]
     speed: number
 }
 
@@ -24,6 +25,7 @@ export interface Sampler extends InstrumentBase {
     audioBuffer?: AudioBuffer
     node?: undefined
     error?: undefined
+    inverted: boolean
 }
 export interface Synth extends InstrumentBase {
     type: "synth",
@@ -63,6 +65,19 @@ export interface Waveform {
   length: number
 }
 
+export interface Fx {
+  id: string
+  name: string;
+  node: FaustAudioWorkletNode;
+  parameters: FxParameter[];
+}
+
+export interface FxFactory {
+  name: string;
+  factory: TCompiledDsp;
+  parameters: FxParameter[];
+}
+
 export interface FxParameter {
   address: string
   label: string
@@ -75,12 +90,9 @@ export interface FxParameter {
 
 export interface Track {
   source?: AudioBufferSourceNode 
-  pitch: number
-  selected: boolean
-  fxChain: {
-    name: string, 
-    node: FaustAudioWorkletNode,
-    parameters: FxParameter[]
-  }[]
+  instrument?: Instrument
+  frequency: number
+  semitones: number
+  fxChain: Fx[]
   pitchshifter?: FaustAudioWorkletNode
 }

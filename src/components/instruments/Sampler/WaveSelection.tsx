@@ -1,10 +1,10 @@
 import { onMount, createSignal, createEffect, batch, onCleanup } from "solid-js"
-import cursorEventHandler from "../../helpers/cursorEventHandler"
-import { actions, store } from "../../Store"
-import { Sampler } from "../../types"
+import cursorEventHandler from "../../../helpers/cursorEventHandler"
+import { actions, store } from "../../../Store"
+import { Sampler } from "../../../types"
 
 export default (props: {
-  canvas: HTMLCanvasElement
+  canvasWidth: number
   instrument: Sampler
 }) => {
   const [start, setStart] = createSignal<number>(0)
@@ -29,15 +29,17 @@ export default (props: {
   }
 
   const calculateOffset = (type: "start" | "end") => {
-    if(!props.canvas || !props.instrument.waveform) return;
+    if(!props.instrument.waveform) return;
     const value = (props.instrument.navigation.start - props.instrument.selection[type]) 
-      * props.canvas.offsetWidth / (props.instrument.waveform.length - props.instrument.navigation.start - props.instrument.navigation.end);
+      * props.canvasWidth / (props.instrument.waveform.length - props.instrument.navigation.start - props.instrument.navigation.end);
     type === "start" 
       ? setStart(value)
       : setEnd(value )
   }
 
   const translateHandle = (type: "start"|"end", delta: number) => {
+    const waveform = props.instrument.waveform
+    if(waveform === undefined) return;
     actions.setSamplerSelection(type, value => {
       value = value - delta;
       if(type === "start"){
@@ -45,7 +47,7 @@ export default (props: {
         value = Math.min(props.instrument.selection.end, value);
       }else{
         value = Math.max(props.instrument.selection.start, value);
-        value = Math.min(props.instrument.waveform.length, value);
+        value = Math.min(waveform.length, value);
       }
       return value
     });
@@ -56,11 +58,11 @@ export default (props: {
     e.stopPropagation();
     setDragging(type);
     if(store.keys.shift) return;
-    if(!props.canvas || !props.instrument.waveform) return;
+    if(!props.instrument.waveform) return;
     let x: number = 0, 
         deltaX: number = 0;
     
-    const ratio = props.canvas.width  / (props.instrument.waveform.length - props.instrument.navigation.start - props.instrument.navigation.end);
+    const ratio = props.canvasWidth  / (props.instrument.waveform.length - props.instrument.navigation.start - props.instrument.navigation.end);
 
     await cursorEventHandler(({clientX}) => {
       if(x){
@@ -82,7 +84,7 @@ export default (props: {
   const clearSelection = () => {
     if(props.instrument.waveform) return;
     setStart(0)
-    setEnd(props.canvas.offsetWidth * -1)
+    setEnd(props.canvasWidth * -1)
   }
 
 
@@ -99,7 +101,7 @@ export default (props: {
         class="absolute z-10 h-full overflow-hidden select-none cursor-move" 
         style={{
           left: start() * -1 +"px",
-          right: (props.canvas.offsetWidth + end()) + "px"
+          right: (props.canvasWidth + end()) + "px"
         }}
         onmousedown={e => calculateSelection(e, "both")}
       >

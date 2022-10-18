@@ -1,7 +1,7 @@
 import { For } from "solid-js"
 import { actions, store } from "../../Store"
 import { Instrument, Inactive, Indices } from "../../types"
-import { Button } from "../UI_elements"
+import { Button, ButtonWithHoverOutline } from "../UI_elements"
 
 const InstrumentSelection = () => {
     const isSelected = (indices: Indices) => {
@@ -17,23 +17,17 @@ const InstrumentSelection = () => {
                     {
                         (instrument, j) => 
                             (
-                                <button
-                                  onclick={() => actions.setSelectedInstrumentIndices(i(), j())}
-                                  class={`flex-1 flex h-12` }
-                                >
-                                    <div 
-                                        class={`flex flex-1 h-full rounded-xl justify-center items-center text-xl ${
-                                            isSelected([i(), j()]) 
-                                            ? "border-4 border-white" 
-                                            : "hover:border-4 hover:border-white"
-                                        }`}
-                                        style={{"background": instrument.active ? instrument.color : "black"}}                     
-                                    >
-                                    <span>
-                                        {i()} : {j()}
-                                    </span>
-                                    </div>
-                                </button>
+                              <ButtonWithHoverOutline
+                                class={
+                                  isSelected([i(), j()]) 
+                                  ? "border-4 border-white" 
+                                  : "hover:border-4 hover:border-white"
+                                }
+                                style={{"background": instrument.active ? instrument.color : "black"}}                     
+                                onclick={() => actions.setSelectedInstrumentIndices(i(), j())}
+                              >
+                                {i()} : {j()}
+                              </ButtonWithHoverOutline>
                             )
                     }
                     </For>

@@ -1,17 +1,22 @@
-import {Bar, ButtonBar} from "./UI_elements"
+import {Button, ButtonBar, SliderBar} from "./UI_elements"
 import { actions, store } from "../Store"
-import FXs from "./FXs"
 import { For } from "solid-js"
 import Pattern from "./Pattern"
+import FxChain from "./Fx/FxChain"
 
 export default () => {
     return (
       <div class="flex-1 flex flex-col w-96">
         <div class="flex gap-2 pb-0 p-2">
-            <ButtonBar onclick={actions.incrementSelectedPattern} style={{background: actions.getPatternColor(store.selection.patternId)}}>
+            <ButtonBar onclick={actions.incrementSelectedPatternId} style={{background: actions.getPatternColor(store.selection.patternId)}}>
                 pattern #{store.patterns.findIndex(pattern => pattern.id === store.selection.patternId)}
             </ButtonBar>
-            <Bar>bpm: {store.bpm}</Bar>
+            <SliderBar 
+              class="bg-white select-none cursor-e-resize text-center" 
+              onchange={(delta, timespan) => actions.setBPM(bpm => bpm + delta, timespan)}
+            >
+              bpm: {store.bpm}
+            </SliderBar>
             <ButtonBar onclick={actions.copySelectedPattern}>copy</ButtonBar>
             <ButtonBar onclick={actions.clearSelectedPattern}>clear</ButtonBar>
             <ButtonBar onclick={actions.clearSelectedPattern}>automate</ButtonBar>
@@ -29,7 +34,28 @@ export default () => {
             </For>
           </div> 
         </div>
-        <FXs/>
+        <div class="p-2 pt-0 " >
+          <div class="flex gap-2 w-full h-4 mb-2 overflow-hidden">
+            <For each={store.tracks}>
+              {
+                (track, index) => (
+                  <Button 
+                    class={`${
+                      store.selection.trackIndex === index() 
+                      ? "bg-black" 
+                      : "bg-white"
+                    } flex-1 h-full`}
+                    onclick={() => actions.setSelectedTrackIndex(index())}
+                  />
+                )
+              }
+            </For>
+          </div>
+          <FxChain 
+            fxChain={store.tracks[store.selection.trackIndex].fxChain}
+            addToFxChain={actions.addToFxChainTrack}
+          />
+        </div>
     </div>
   )
 }

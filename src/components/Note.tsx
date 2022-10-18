@@ -1,4 +1,6 @@
 import { createEffect, Show } from "solid-js"
+import ftom from "../helpers/ftom"
+import mton from "../helpers/mton"
 import { actions, store } from "../Store"
 import { Indices, ActiveNote, Note as NoteType} from "../types"
 
@@ -46,11 +48,11 @@ const Note = (props: {
             style={{background: getColor(), filter: props.shouldBlink ? "brightness(1.5)" : ""}}
         >
             <Show when={props.note.active}>
-                <div class="h-full flex-1 self-center flex items-center justify-center">
+                {/* <div class="h-full flex-1 self-center flex items-center justify-center">
                     {(props.note as ActiveNote).instrumentIndices.join(" : ")}
-                </div>
-                <div class="h-full flex-1 self-center flex items-center justify-center" style={{background: "rgba(250,250,250,0.125)"}}>
-                    {(props.note as ActiveNote).frequency.toFixed(0)}
+                </div> */}
+                <div class="h-full flex-1 self-center flex items-center justify-center" /* style={{background: "rgba(250,250,250,0.125)"}} */>
+                    {mton(ftom((props.note as ActiveNote).frequency))}
                 </div>
             </Show>
         </div>

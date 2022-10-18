@@ -1,9 +1,10 @@
-import { batch, createEffect, createSignal, createUniqueId, onCleanup, onMount } from "solid-js"
-import cursorEventHandler from "../../helpers/cursorEventHandler";
-import WaveDrawer from "../../helpers/WaveDrawer";
-import { actions, store } from "../../Store";
-import { Sampler, Waveform } from "../../types";
-import { Block } from "../UI_elements";
+import { batch, createEffect, createSignal, createUniqueId, onCleanup, onMount, Show } from "solid-js"
+import cursorEventHandler from "../../../helpers/cursorEventHandler";
+import WaveDrawer from "../../../helpers/WaveDrawer";
+import { actions, store } from "../../../Store";
+import { Sampler, Waveform } from "../../../types";
+import { Block, CenteredLabel } from "../../UI_elements";
+import WaveGrid from "./WaveGrid";
 import WaveSelection from "./WaveSelection";
 // import {setCanvas, setWaveform, renderWaveform} from "../../workers/draw.worker"
 
@@ -16,12 +17,15 @@ const WaveVisualizer = (props: {
   let canvas: HTMLCanvasElement;
   let webworker: Worker;
   let drawer: WaveDrawer;
-
   let timeout: number;
+
+  const [canvasWidth, setCanvasWidth] = createSignal<number>(0);
 
   const init = () => {
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
+
+    setCanvasWidth(canvas.offsetWidth);
 
     if("transferControlToOffscreen" in canvas){
       webworker = new Worker('/drawer.worker.js');
@@ -84,6 +88,7 @@ const WaveVisualizer = (props: {
   const resize = () => {
     if(!props.instrument.waveform) return;
     if(timeout) clearTimeout(timeout);
+    setCanvasWidth(canvas.offsetWidth);
     timeout = setTimeout(() => {
       if(!props.instrument.waveform) return;
       if(webworker)
@@ -122,21 +127,34 @@ const WaveVisualizer = (props: {
 
 
   return (
-    <div class="h-64 flex">
+    <div class="h-48 flex">
       <Block 
         class="relative bg-selected flex-1 overflow-hidden" 
         onwheel={(e) => {console.log("onwheel", e)}}
         onmousedown={mousedown}
       >
-        <canvas 
-          id={id} 
-          ref={canvas!} 
-          class="flex-1 pt-5 pb-5 w-full"
-        />
-        <WaveSelection 
-          canvas={canvas!} 
-          instrument={props.instrument}
-        />
+        <div class="w-full h-full absolute z-20 pointer-events-none pt-4 pb-4">
+          <canvas 
+            id={id} 
+            ref={canvas!} 
+            class="flex-1 w-full h-full"
+          />
+        </div>
+        <Show 
+          when={props.instrument.waveform}
+          fallback={<CenteredLabel label="load a sample"/>}
+        >
+          
+          <WaveGrid
+            canvasWidth={canvasWidth()}
+            instrument={props.instrument}
+          />
+          <WaveSelection 
+            canvasWidth={canvasWidth()}
+            instrument={props.instrument}
+          />
+        </Show>
+        
       </Block>
     </div>
   )

@@ -5,18 +5,17 @@ import { Bar, Block } from "./UI_elements"
 import zeptoid from 'zeptoid';
 import getLocalPosition from "../helpers/getLocalPosition";
 import moveInArray from "../helpers/moveInArray";
-import autoAnimate from '@formkit/auto-animate'
 
 const Macro = () => {
-
-    let patternRef: HTMLElement, 
-        compositionRef: HTMLElement;
-
     type Drag = {type: "pattern" | "composition", patternId: string, dragId: string}
 
     const [drag, setDrag] = createSignal<Drag>();
 
-    const dragstart = (e: DragEvent, {type, patternId, dragId}: Drag) => {
+    const dragstart = (
+      e: DragEvent, 
+      {type, patternId, dragId} : 
+      {type: "pattern" | "composition", patternId: string, dragId?: string}
+    ) => {
         if(!dragId)
             dragId = zeptoid();
 
@@ -149,79 +148,78 @@ const Macro = () => {
         setStore("composition", produce((composition) => {composition.splice(dragIndex, 1)}))
     }
 
-/*     onMount(()=>{
-        if(!patternRef || !compositionRef) return;
-        autoAnimate(patternRef)
-        autoAnimate(compositionRef)
-    }) */
 
-
-    return <div class="flex-1 flex gap-2 m-2 overflow-hidden">
-        <div class="flex flex-col flex-1 overflow-hidden">
-            {/* <Bar class="mb-2 flex-grow-0 flex-auto">patterns</Bar> */}
-            <div class="flex flex-1 overflow-hidden rounded-xl">
-                <div class="flex-1 overflow-auto bg-white p-2" ref={patternRef}>
+    return (
+      <Block class="flex flex-0 w-64 p-2 bg-neutral-100 max-h-1/2 overflow-hidden">
+        <div class="flex flex-col flex-1 gap-2">
+          <div>
+            <Bar class="bg-white">COMPOSITION</Bar>  
+          </div>
+          <div class="flex-1 flex gap-2 overflow-hidden">
+            <div class="flex flex-col flex-1 overflow-hidden">
+                <div class="flex flex-1 overflow-hidden rounded-xl">
+                  <div class="flex-1 overflow-auto bg-white p-2">
                     <For each={store.patterns} >
-                        {
-                            (pattern, i) => <div 
-                                draggable={true} 
-                                ondragstart={(e)=>dragstart(e, {type: "pattern", patternId: pattern.id})}
-                                class="mb-2 rounded-xl bg-red-500 translate-x-0"
-                            >
-                                <Bar 
-                                    style={{
-                                        background: actions.getPatternColor(pattern.id) || "",
-                                    }}
-                                >#{i()} </Bar>
-                            </div> 
-                        }
+                      {
+                        (pattern, i) => (
+                          <div 
+                            draggable={true} 
+                            ondragstart={(e)=>dragstart(e, {type: "pattern", patternId: pattern.id})}
+                            ondblclick={()=>actions.setSelectedPatternId(pattern.id)}
+                            class="mb-2 rounded-xl bg-red-500 translate-x-0"
+                          >
+                            <Bar 
+                              class="cursor-pointer"
+                              style={{
+                                  background: actions.getPatternColor(pattern.id) || "",
+                              }}
+                            >#{i()} </Bar>
+                          </div> 
+                        )
+                      }
                     </For>
+                  </div>
                 </div>
-                
             </div>
-            
-        </div>
-        <div class="flex flex-col flex-1 overflow-auto" >
-            {/* <Bar class="mb-2 flex-grow-0 flex-auto">composition</Bar> */}
-            <div class="flex flex-1 overflow-hidden rounded-xl">
+            <div class="flex flex-col flex-1 overflow-auto" >
+              <div class="flex flex-1 overflow-hidden rounded-xl">
                 <div 
-                    ref={compositionRef}
-                    class="flex-1 overflow-auto bg-white p-2" 
-                    ondragover={dragover} 
-                    ondrop={drop} 
-                    data-type="composition" 
-                    data-parent={true}
-                    ondragleave={dragleave}
+                  class="flex-1 overflow-auto bg-white p-2" 
+                  ondragover={dragover} 
+                  ondrop={drop} 
+                  data-type="composition" 
+                  data-parent={true}
+                  ondragleave={dragleave}
                 >
-                    <For each={store.composition}>
-                        {
-                            ({id, patternId}) => <div 
-                                draggable={true}
-                                ondragstart={(e) => dragstart(e, {type: "composition", patternId: patternId, dragId: id})}
-                                ondragover={dragover}
-                                class="mb-2"
-                                data-type="composition"
-                                data-id={id}
-                            >
-                                <Bar 
-                                    class="pointer-events-none" 
-                                    style={{
-                                        background: actions.getPatternColor(patternId),
-                                        filter: id === store.selection.blockId ? "brightness(1.2)" : ""
-                                    }}
-                                >
-                                    #{actions.getPatternIndex(patternId)}
-                                </Bar>
-                            </div> 
-                        }
-                    </For>  
+                  <For each={store.composition}>
+                    {
+                      ({id, patternId}) => <div 
+                        draggable={true}
+                        ondragstart={(e) => dragstart(e, {type: "composition", patternId: patternId, dragId: id})}
+                        ondragover={dragover}
+                        class="mb-2 cursor-move"
+                        data-type="composition"
+                        data-id={id}
+                      >
+                        <Bar 
+                          class="pointer-events-none" 
+                          style={{
+                            background: actions.getPatternColor(patternId),
+                            filter: id === store.selection.blockId ? "brightness(1.2)" : ""
+                          }}
+                        >
+                          #{actions.getPatternIndex(patternId)}
+                        </Bar>
+                      </div> 
+                    }
+                  </For>  
                 </div>
+              </div>
             </div>
-             
+          </div>
         </div>
-    </div>
-        
-                    
+      </Block>
+    )               
 }
 
 export default Macro

@@ -9,12 +9,30 @@ import { Instrument } from "./types"
 import mtof from "./helpers/mtof"
 
 import "./App.css"
+import bpmToMs from "./helpers/bpmToMs"
+import Composition from "./components/Composition"
+import FxEditor from "./components/Fx/FxEditor"
+
+
 
 function App() {
+
+  // console.log("faust is ", window.faust_module)
+
+  let lastTime = performance.now();
+  let spb, c;
   const clock = () => {
     requestAnimationFrame(clock);
-    const c = Math.floor((performance.now() - store.clockOffset) / (60 / store.bpm * 1000 / 4));
+    spb = 1000 / (store.bpm / 60 * 4)
+
+    const c = Math.floor((performance.now() - store.clockOffset) / bpmToMs(store.bpm));
+    // c = Math.floor((performance.now() - store.clockOffset)/ spb);
+    // console.log(c);
+
     if(c > store.clock){
+      // console.log(performance.now() - lastTime);
+      lastTime = performance.now();
+
       setStore("clock", c);
       actions.renderAudio();
     }
@@ -29,17 +47,29 @@ function App() {
     }
   }
 
+  const initContext = async () => {
+    // actions.initContext();
+    window.removeEventListener("mousedown", initContext)
+    await actions.initFaust()
+    await actions.initInstruments()
+    await actions.initTracks()
+    actions.initKeyboard();
+  }
+
   const initApp = async () => {
     const root = document.documentElement;
     root.style.setProperty('--selected-color', actions.getSelectedInstrument().color);
     
-    actions.initContext()
+    // actions.initContext()
     await actions.initFaust()
+    await actions.initFx()
     await actions.initInstruments()
     await actions.initTracks()
     actions.initKeyboard();
 
     clock();
+
+    // window.addEventListener("mousedown", initContext)
   }
 
   const cleanup = () => {
@@ -51,7 +81,7 @@ function App() {
   createEffect(setSelectedColorCSS)
 
   return (
-    <div class="flex flex-1 bg-slate-200" style={{"filter": "var(--modal-filter)"}}>
+    <div class="flex flex-1 bg-neutral-300" style={{"filter": "var(--modal-filter)"}}>
       <div class="flex flex-1 h-full">
         <Piano
           frequency={store.selection.frequency}
@@ -59,8 +89,12 @@ function App() {
         />
         <Patterns/>
       </div>
-      <div class="flex flex-1 flex-col h-full p-2 gap-4">
-        <InstrumentUI />
+      <div class="flex flex-1 h-full p-2 gap-2">
+        <Composition/>
+        <div class="flex flex-col flex-1 pl-2 pr-2 gap-2 w-96">
+          <InstrumentUI/>
+          <FxEditor/>
+        </div>
       </div>
   </div>
   )

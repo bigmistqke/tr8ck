@@ -27,7 +27,7 @@ class WaveDrawer {
     if(x % this.filter! === this.filter! - 1){
       const average = this.accumulator / this.filter!;
       const _x = (x ) * this.ratio!;
-      const _y = this.scaleY(average, this.canvas!.height) + 0.5;
+      const _y = this.scaleY(average, this.canvas!.offsetHeight) + 0.5;
       this.context!.lineTo(_x, _y);
       this.accumulator = 0
     }
@@ -45,6 +45,8 @@ class WaveDrawer {
     if(!this.waveform || !this.context || !this.canvas) return;
 
     this.canvas.width = width;
+    this.canvas.height = this.canvas.parentElement?.offsetHeight || this.canvas.offsetHeight;
+
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.ratio = width / (this.waveform.length - start - end);

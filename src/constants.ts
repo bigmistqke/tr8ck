@@ -1,7 +1,7 @@
 import mtof from "./helpers/mtof";
 
 const ROOT_FREQUENCY = mtof(72);
-const INSTRUMENT_AMOUNT = 4;
+const INSTRUMENT_AMOUNT = [2,6];
 const SEQUENCE_AMOUNT = 4;
 const SEQUENCE_LENGTH = 16;
 
@@ -40,7 +40,7 @@ pitchshifter =
     ef.transpose(
         hslider("window", 1000, 50, 10000, 1) : si.smoo,
         hslider("xfade", 10, 1, 10000, 1) : si.smoo,
-        hslider("shift", 0, -36, +36, 0.1) : si.smoo
+        hslider("shift", 0, -72, +72, 0.1) : si.smoo
     )
   );
 
