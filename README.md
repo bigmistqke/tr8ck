@@ -17,6 +17,6 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
 - [x] synths with Faust
 - [x] sampler
 - [x] effect chain with Faust
+- [X] synthax-highlighting and completions for Faust (CodeMirror integration)
 - [ ] automations
-- [ ] synthax-highlighting and completions for Faust
 - [ ] save and render set
