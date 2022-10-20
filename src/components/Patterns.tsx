@@ -1,4 +1,4 @@
-import {Button, ButtonBar, SliderBar} from "./UI_elements"
+import {Button, ButtonBar, SliderBar} from "./UIElements"
 import { actions, store } from "../Store"
 import { For } from "solid-js"
 import Pattern from "./Pattern"
@@ -13,11 +13,11 @@ export default () => {
             </ButtonBar>
             <SliderBar 
               class="bg-white select-none cursor-e-resize text-center" 
-              onchange={(delta, timespan) => actions.setBPM(bpm => bpm + delta, timespan)}
+              onupdate={(delta, timespan) => actions.setBPM(bpm => bpm + delta, timespan)}
             >
               bpm: {store.bpm}
             </SliderBar>
-            <ButtonBar onclick={actions.copySelectedPattern}>copy</ButtonBar>
+            <ButtonBar onclick={actions.copySelectedPattern}>clone</ButtonBar>
             <ButtonBar onclick={actions.clearSelectedPattern}>clear</ButtonBar>
             <ButtonBar onclick={actions.clearSelectedPattern}>automate</ButtonBar>
         </div>
@@ -52,8 +52,11 @@ export default () => {
             </For>
           </div>
           <FxChain 
-            fxChain={store.tracks[store.selection.trackIndex].fxChain}
-            addToFxChain={actions.addToFxChainTrack}
+            fxChain={actions.getSelectedTrack().fxChain}
+            createNodeAndAddToFxChain={actions.createNodeAndAddToFxChainTrack}
+            removeNodeFromFxChain={actions.removeNodeFromFxChainTrack}
+            compilingIds={actions.getSelectedTrack().compilingIds}
+            updateOrder={actions.updateOrderFxChainTrack}
           />
         </div>
     </div>

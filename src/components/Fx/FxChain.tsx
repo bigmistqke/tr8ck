@@ -1,63 +1,107 @@
-import { createEffect, For, Match, Show, Switch } from "solid-js"
-import { actions, store } from "../../Store"
-import Fx from "./Fx"
-import { Block, CenteredLabel } from "../UI_elements"
-import { Fx as FxType } from "../../types"
+import deepClone from "deep-clone"
+import { For, Show } from "solid-js"
 import { createStore } from "solid-js/store"
+import { store } from "../../Store"
+import { FaustFactory, FxNode } from "../../types"
+import { Block, CenteredLabel } from "../UIElements"
+import Fx from "./Fx"
 
 export default (props: {
-  fxChain: FxType[]
+  fxChain: FxNode[]
   class?: string
-  addToFxChain: (fx: FxType) => void
-}) => {
-  const [fxChain, setFxChain] = createStore<FxType[]>(props.fxChain);
-  
-  console.log('fxChain', props.addToFxChain);
+  compilingIds: string[]
+  createNodeAndAddToFxChain: (
+    fx: {
+      factory: FaustFactory
+      id: string
+      parameters: any[] | undefined
+    }, 
+    index: number
+  ) => void
+  removeNodeFromFxChain: (id: string) => void
+  updateOrder: (index1: number, index2: number) => void
+}) => {  
+  let container : HTMLDivElement;
 
-  const drop = (e) => {
+  const [_, setFxChain] = createStore(props.fxChain);
+
+
+  const drop = (e: DragEvent) => {
+    dragCount = 0;
     e.preventDefault();
   }
 
-  let draggingId: string;
+  let dragCount = 0;
+
+  const dragenter = (e: DragEvent) => {
+    // if(e.target.id === store.dragging.fx?.id) return;
+    dragCount++
+  }
 
   const dragover = async (e:DragEvent) => {
     e.preventDefault()
+
     const draggingFx = store.dragging.fx
     if(draggingFx === undefined) return;
-
-    const {name, id} = draggingFx;
+    const {name, id, parameters, active} = draggingFx;
 
     if(
-      (
-        !draggingId 
-        || draggingId !== id  
-      )
-      && !fxChain.find(fx => fx.id === id)
+      !props.compilingIds.includes(id)
+      && !props.fxChain.find(fx => fx.id === id)
     ){
-      draggingId = id;
-      const fx = store.fxs.find(fx => fx.name === name);
-      if(fx === undefined) return;    
-      const {factory, parameters} = fx;  
-      const node = await actions.createFaustNode(factory)
-      if(!node) return;
-      // setFxChain(fxs => [...fxs, {name, id, node, parameters}])
-      /* if(!props.addToFxChain){
-        console.log(props);
-      }else */
-        props.addToFxChain({name, id, node, parameters})
+      const factory = store.faustFactories.find(fx => fx.name === name);
+      if(factory === undefined) return;   
+
+      const node = {factory, id, parameters: deepClone(parameters), active}
+
+      props.createNodeAndAddToFxChain(node, props.fxChain.length)
     }
+
     return;
   }
 
-  createEffect(()=>{
-    console.log("fxChain.length is", props.fxChain.length);
-  })
+  const dragleave = (e: DragEvent) => {
+    e.preventDefault()
+    console.log(e.target);
+    // if((e.target as HTMLElement).id === store.dragging.fx?.id) return;
+    dragCount--;
+
+    const draggingFx = store.dragging.fx
+
+    if(draggingFx === undefined) return;
+    const {name, id, detachable} = draggingFx;
+
+    console.log('dragleave', detachable, dragCount);
+
+    if(detachable && dragCount === 0){
+      props.removeNodeFromFxChain(id)
+    }
+  }
   
+  const updateOrder = (id1: string, id2: string) => {
+    const index1 = props.fxChain.findIndex(fx => fx.id === id1);
+    const index2 = props.fxChain.findIndex(fx => fx.id === id2);
+
+    if(index1 === -1){
+      // setFxChain(produce((fxs) =>ARRAY.insertBeforeElement(fxs, )))
+    }else 
+    if(index2 === -1){
+
+    }else{
+      if(index1 < index2) return;
+      props.updateOrder(index1, index2)
+      dragCount--;
+    }
+  }
+
   return (
     <Block 
-      class={`relative gap-2 h-24 p-2 bg-white whitespace-nowrap overflow-x-auto overflow-y-hidden ${props.class}`}
+      class={`relative flex gap-2 h-24 p-2 bg-white whitespace-nowrap overflow-x-auto overflow-y-hidden ${props.class}`}
       ondragover={dragover}
+      ondragleave={dragleave}
       ondrop={drop}
+      ondragenter={dragenter}
+      ref={container!}
     >
       <Show 
         when={props.fxChain.length > 0}
@@ -65,13 +109,7 @@ export default (props: {
       >
         <For each={props.fxChain}>
           {
-            (fx) => <>
-              <Fx 
-                name={fx.name} 
-                node={fx.node} 
-                parameters={fx.parameters}
-              />
-            </>
+            (fx, index) => <Fx state={fx} index={index()} updateOrder={updateOrder} resetDragCount={() => dragCount = 0}/>
           }
         </For>
       </Show>

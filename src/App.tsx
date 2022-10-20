@@ -1,4 +1,4 @@
-import { createEffect, onCleanup, onMount } from "solid-js"
+import { createEffect, For, onCleanup, onMount } from "solid-js"
 import {store, setStore, actions} from "./Store"
 
 import Piano from "./components/Piano"
@@ -11,13 +11,17 @@ import mtof from "./helpers/mtof"
 import "./App.css"
 import bpmToMs from "./helpers/bpmToMs"
 import Composition from "./components/Composition"
-import FxEditor from "./components/Fx/FxEditor"
+import FxPool from "./components/Fx/FxPool"
 
+import {basicSetup} from "CodeMirror"
+import FaustCodeEditor from "./components/FaustCodeEditor"
+import { Portal } from "solid-js/web"
+import { DEFAULT_CODE } from "./constants"
 
 
 function App() {
 
-  // console.log("faust is ", window.faust_module)
+
 
   let lastTime = performance.now();
   let spb, c;
@@ -27,10 +31,10 @@ function App() {
 
     const c = Math.floor((performance.now() - store.clockOffset) / bpmToMs(store.bpm));
     // c = Math.floor((performance.now() - store.clockOffset)/ spb);
-    // console.log(c);
+
 
     if(c > store.clock){
-      // console.log(performance.now() - lastTime);
+
       lastTime = performance.now();
 
       setStore("clock", c);
@@ -39,8 +43,7 @@ function App() {
   }
 
   const setSelectedColorCSS = () => {
-    const [i,j] = store.selection.instrumentIndices;
-    const instrument = store.instruments[i][j]
+    const instrument = actions.getSelectedInstrument();
     if("color" in instrument){
       const root = document.documentElement;
       root.style.setProperty('--selected-color', (instrument as Instrument).color)
@@ -68,8 +71,6 @@ function App() {
     actions.initKeyboard();
 
     clock();
-
-    // window.addEventListener("mousedown", initContext)
   }
 
   const cleanup = () => {
@@ -80,8 +81,13 @@ function App() {
   onCleanup(cleanup)
   createEffect(setSelectedColorCSS)
 
-  return (
-    <div class="flex flex-1 bg-neutral-300" style={{"filter": "var(--modal-filter)"}}>
+  return (<>
+    <For each={store.editors}>
+      {
+        (editor) => <FaustCodeEditor {...editor}/>
+      }
+    </For>
+    <div class="flex flex-1 bg-neutral-200" style={{"filter": "var(--modal-filter)"}}>
       <div class="flex flex-1 h-full">
         <Piano
           frequency={store.selection.frequency}
@@ -93,10 +99,12 @@ function App() {
         <Composition/>
         <div class="flex flex-col flex-1 pl-2 pr-2 gap-2 w-96">
           <InstrumentUI/>
-          <FxEditor/>
+          <FxPool/>
         </div>
       </div>
-  </div>
+    </div>
+  </>
+    
   )
 }
 

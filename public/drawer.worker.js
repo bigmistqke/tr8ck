@@ -72,10 +72,10 @@ const WaveDrawer = function(){
     
     this.context.closePath();
 
-    this.context.strokeStyle = "rgb(163 163 163)";
+    this.context.strokeStyle = "rgb(82 82 82 / var(--tw-bg-opacity))";
     this.context.lineWidth = 1;
     this.context.stroke();
-    this.context.fillStyle = "rgb(163 163 163)";
+    this.context.fillStyle = "rgb(82 82 82 / var(--tw-bg-opacity))";
     this.context.fill();
     
     // console.timeEnd("draw_wave");

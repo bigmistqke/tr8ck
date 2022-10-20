@@ -4,17 +4,14 @@ import SynthUI from "./Synth"
 import { Sampler, Synth } from "../../types"
 import { actions, store } from "../../Store"
 import InstrumentSelection from "./InstrumentSelection"
-import {  Bar, Block, ButtonBar } from "../UI_elements"
+import {  Bar, Block, ButtonBar } from "../UIElements"
 import FxChain from "../Fx/FxChain"
 
 export type Instrument = Sampler | Synth 
-
-
 const Instrument = () => {
     const instrument = actions.getSelectedInstrument
-    const indices = store.selection.instrumentIndices
     const type = () => {
-        const i = actions.getSelectedInstrument();
+        const i = instrument();
         return i.active ? i.type : undefined
     }
     
@@ -23,9 +20,9 @@ const Instrument = () => {
         <div class="flex flex-1 flex-col gap-2 w-full">
             <div class="flex flex-1 flex-col gap-2">
                 <div class="flex  text-black gap-2">
-                    <Bar class="bg-selected select-none">{indices[0]} : {indices[1]}</Bar>
+                    <Bar class="bg-selected select-none">#{store.selection.instrumentIndex}</Bar>
                     <Bar class="flex-1 text-center bg-white select-none">{type()?.toUpperCase()}</Bar>
-                    <ButtonBar class="flex-1 text-center bg-white" onclick={actions.toggleTypeSelectedInstrument}>change</ButtonBar>
+                    <ButtonBar class="flex-1 text-center bg-white" onclick={actions.toggleTypeSelectedInstrument}>change instrument</ButtonBar>
                 </div>
                 <Switch fallback={<>error type of instrument is undefined</>}>
                     <Match when={type() === "sampler"}>
@@ -38,9 +35,12 @@ const Instrument = () => {
                     </Match>
                 </Switch>
                 <FxChain 
-                  fxChain={instrument().fxChain} 
+                  fxChain={instrument().fxChains[0]} 
                   class="w-full overflow-hidden"
-                  addToFxChain={actions.addToFxChainInstrument}
+                  createNodeAndAddToFxChain={actions.createNodeAndAddToFxChainInstrument}
+                  removeNodeFromFxChain={actions.removeNodeFromFxChainInstrument}
+                  compilingIds={instrument().compilingIds}
+                  updateOrder={actions.updateOrderFxChainInstrument}
                 />
                 <InstrumentSelection/>
             </div>

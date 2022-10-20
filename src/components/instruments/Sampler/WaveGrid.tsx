@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For } from "solid-js";
+import { createMemo, For } from "solid-js";
 import { store } from "../../../Store";
 import { Sampler } from "../../../types";
 
@@ -25,8 +25,10 @@ export default (props: {instrument: Sampler, canvasWidth: number}) => {
     const visibleAmount = visibleTime * spb();
     const flooredAmount = Math.floor(visibleTime * spb()) + 2
     const gridWidth = props.canvasWidth / visibleAmount;
+
+
     
-    return Array(flooredAmount).fill(0).map((_, index) => gridWidth)
+    return Array(Math.abs(flooredAmount)).fill(0).map((_, index) => gridWidth)
   })
 
   const additionalOffset = createMemo(()=> {
@@ -48,26 +50,28 @@ export default (props: {instrument: Sampler, canvasWidth: number}) => {
     return navigationStartOffset - selectionStartOffset
   })
 
-  return <div class="absolute w-full h-full top-0 z-10 pointer-events-none">
-    <For each={gridLines()}>
-      {
-        (gridWidth, index) => (
-          <For each={Array(4).fill(0)}>
-            {
-              (_, childIndex) => (
-                <span 
-                  class="absolute h-full top-0 bg-neutral-200" 
-                  style={{
-                    left: gridWidth * (index() - 1) + (gridWidth / 4) * childIndex() - additionalOffset() + "px",
-                    background: childIndex() === 0 ? "white" : "",
-                    width: childIndex() === 0 ? "4px" : "2px"
-                  }}
-                />
-              )
-            }
-          </For>          
-        )
-      }
-    </For>
-  </div>
+  return (
+    <div class="absolute w-full h-full top-0 z-10 pointer-events-none">
+      <For each={gridLines()}>
+        {
+          (gridWidth, index) => (
+            <For each={Array(4).fill(0)}>
+              {
+                (_, childIndex) => (
+                  <span 
+                    class="absolute h-full top-0 bg-neutral-200" 
+                    style={{
+                      left: gridWidth * (index() - 1) + (gridWidth / 4) * childIndex() - additionalOffset() + "px",
+                      background: childIndex() === 0 ? "white" : "",
+                      width: childIndex() === 0 ? "4px" : "2px"
+                    }}
+                  />
+                )
+              }
+            </For>          
+          )
+        }
+      </For>
+    </div>
+  )
 }

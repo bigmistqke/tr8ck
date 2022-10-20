@@ -1,7 +1,7 @@
 import {  createSignal, For, onMount } from "solid-js"
 import { produce } from "solid-js/store"
 import { actions, setStore, store } from "../Store"
-import { Bar, Block } from "./UI_elements"
+import { Bar, Block } from "./UIElements"
 import zeptoid from 'zeptoid';
 import getLocalPosition from "../helpers/getLocalPosition";
 import moveInArray from "../helpers/moveInArray";
@@ -19,7 +19,7 @@ const Macro = () => {
         if(!dragId)
             dragId = zeptoid();
 
-        console.log('type is ', type, patternId, dragId, e.dataTransfer);
+
 
         setDrag({
             type,
@@ -32,7 +32,7 @@ const Macro = () => {
         e.dataTransfer!.setData("drag-id", dragId); */
     }
 
-    const drop = (e) => {
+    const drop = (e: DragEvent) => {
         e.preventDefault();
     }
 
@@ -41,7 +41,7 @@ const Macro = () => {
 
         if(!e.dataTransfer) return;
 
-        // console.log("dataTransfer is ", e.dataTransfer.)
+
 
         // const dragType = e.dataTransfer.getData("type")
 
@@ -53,7 +53,7 @@ const Macro = () => {
 
         const targetType = (e.target as HTMLElement).getAttribute("data-type")
 
-        // console.log(dragType, targetType);
+
 
         if(dragType === "pattern" && targetType === "composition"){
 /*             const dragId = e.dataTransfer.getData("drag-id")
@@ -166,7 +166,7 @@ const Macro = () => {
                             draggable={true} 
                             ondragstart={(e)=>dragstart(e, {type: "pattern", patternId: pattern.id})}
                             ondblclick={()=>actions.setSelectedPatternId(pattern.id)}
-                            class="mb-2 rounded-xl bg-red-500 translate-x-0"
+                            class="mb-2 rounded-xl translate-x-0"
                           >
                             <Bar 
                               class="cursor-pointer"

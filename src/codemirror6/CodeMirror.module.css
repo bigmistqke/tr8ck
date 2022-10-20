@@ -1,0 +1,14 @@
+.container > div {
+  height: 100%;
+  background: white;
+  /* border-radius: 7px; */
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
+  border-bottom-left-radius: 7px;
+  overflow: auto;
+  outline: none !important;
+  resize: both;
+  width: 24rem;
+  height: 24rem;
+  box-shadow: inset 5px 0px 15px rgb(209, 209, 209);
+}

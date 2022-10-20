@@ -1,9 +1,7 @@
-import { Faust } from "faust2webaudio"
 import { For } from "solid-js"
 import { createStore } from "solid-js/store"
-import Note, { Note as NoteType } from "./Note"
-import { Instrument, Indices } from "../types"
 import { store } from "../Store"
+import Note, { Note as NoteType } from "./Note"
 
 export default (props: {
   amount: number
@@ -13,7 +11,7 @@ export default (props: {
 
   return (
     <div class="flex flex-1">
-      <div class="flex flex-1 flex-col gap-2">
+      <div class="flex flex-1 flex-col gap-2 mt-2">
         <For each={seq}>
           {
             (el, index) => 
@@ -21,6 +19,7 @@ export default (props: {
                 setNote={(note: NoteType) => setSeq(index(), note)}
                 note={seq[index()]}
                 shouldBlink={store.clock % seq.length === index()}
+                class={((index() + 1) / 4) % 1 === 0 ? "mb-4" : ""}
               />
           }
         </For>

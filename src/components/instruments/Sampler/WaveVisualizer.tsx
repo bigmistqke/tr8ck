@@ -3,7 +3,7 @@ import cursorEventHandler from "../../../helpers/cursorEventHandler";
 import WaveDrawer from "../../../helpers/WaveDrawer";
 import { actions, store } from "../../../Store";
 import { Sampler, Waveform } from "../../../types";
-import { Block, CenteredLabel } from "../../UI_elements";
+import { Block, CenteredLabel } from "../../UIElements";
 import WaveGrid from "./WaveGrid";
 import WaveSelection from "./WaveSelection";
 // import {setCanvas, setWaveform, renderWaveform} from "../../workers/draw.worker"
@@ -52,7 +52,7 @@ const WaveVisualizer = (props: {
     if(!webworker){
       // drawer.setWaveform(props.instrument.waveform);
     }else{
-      console.log('waveform is ', props.instrument.waveform);
+
       webworker.postMessage({msg: 'waveform', waveform: JSON.parse(JSON.stringify(props.instrument.waveform))}, []);
       webworker.postMessage({msg: 'width', width: canvas.offsetWidth}, []);
       webworker.postMessage({msg: 'render', width: canvas.offsetWidth}, []);
@@ -130,7 +130,6 @@ const WaveVisualizer = (props: {
     <div class="h-48 flex">
       <Block 
         class="relative bg-selected flex-1 overflow-hidden" 
-        onwheel={(e) => {console.log("onwheel", e)}}
         onmousedown={mousedown}
       >
         <div class="w-full h-full absolute z-20 pointer-events-none pt-4 pb-4">

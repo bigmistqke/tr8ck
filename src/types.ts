@@ -3,9 +3,11 @@ import { TCompiledCode, TCompiledDsp } from "faust2webaudio/src/types"
 
 interface InstrumentBase {
     active: true
+    index: number
     pan: number
     color: string
-    fxChain: Fx[]
+    fxChains: FxNode[][]
+    compilingIds: string[]
     speed: number
 }
 
@@ -40,7 +42,7 @@ export type createFaustNode = (code: string) => Promise<Faust2WebAudio.FaustAudi
 export   interface ActiveNote  {
   active: true
   frequency: number
-  instrumentIndices: Indices
+  instrumentIndex: number
 }
 export interface Inactive{
   active: false
@@ -65,17 +67,21 @@ export interface Waveform {
   length: number
 }
 
-export interface Fx {
+export interface FxNode {
   id: string
-  name: string;
-  node: FaustAudioWorkletNode;
-  parameters: FxParameter[];
+  name: string
+  node: FaustAudioWorkletNode
+  parameters: FxParameter[]
+  prev: FaustAudioWorkletNode | undefined
+  detachable: boolean
+  active: boolean
 }
 
-export interface FxFactory {
-  name: string;
-  factory: TCompiledDsp;
-  parameters: FxParameter[];
+export interface FaustFactory {
+  id: string
+  name: string
+  dsp: TCompiledDsp
+  parameters: FxParameter[]
 }
 
 export interface FxParameter {
@@ -90,9 +96,10 @@ export interface FxParameter {
 
 export interface Track {
   source?: AudioBufferSourceNode 
-  instrument?: Instrument
+  instrumentIndex?: number
   frequency: number
   semitones: number
-  fxChain: Fx[]
+  fxChain: FxNode[]
   pitchshifter?: FaustAudioWorkletNode
+  compilingIds: string[]
 }

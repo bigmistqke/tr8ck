@@ -1,12 +1,12 @@
-import { batch, createEffect } from "solid-js"
-import arrayBufferToWaveform from "../../../waveform/arrayBufferToWaveform"
+import { batch } from "solid-js"
 import fileToArrayBuffer from "../../../helpers/fileToArrayBuffer"
-import { actions, setStore, store } from "../../../Store"
+import { actions, store } from "../../../Store"
 import { Sampler } from "../../../types"
-import { Button, ButtonBar, SliderBar } from "../../UI_elements"
+import arrayBufferToWaveform from "../../../waveform/arrayBufferToWaveform"
+import { ButtonBar, SliderBar } from "../../UIElements"
 import WaveVisualizer from "./WaveVisualizer"
 
-const SamplerUI = () => {
+export default () => {
   let input: HTMLInputElement;
   const instrument  = () => actions.getSelectedInstrument() as Sampler;
 
@@ -36,9 +36,9 @@ const SamplerUI = () => {
         <div class="flex gap-2">
             <input type="file" ref={input!} oninput={uploadFile} hidden/>
             <ButtonBar onclick={() => input.click()}>load sample</ButtonBar>
-            <ButtonBar onclick={actions.revertSamplerAudiobuffer}>revert sampler</ButtonBar>
+            <ButtonBar onclick={actions.revertSamplerAudiobuffer}>revert sample</ButtonBar>
             <SliderBar 
-              onchange={(value) => actions.setSamplerSpeed(speed => speed + value / 100)}
+              onupdate={(value) => actions.setSamplerSpeed(speed => speed + value / 100)}
             >
               speed: {Math.floor(instrument().speed * 100)}%
             </SliderBar>
@@ -47,4 +47,3 @@ const SamplerUI = () => {
   )
 }
   
-export default SamplerUI

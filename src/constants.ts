@@ -1,8 +1,8 @@
 import mtof from "./helpers/mtof";
 
 const ROOT_FREQUENCY = mtof(72);
-const INSTRUMENT_AMOUNT = [2,6];
-const SEQUENCE_AMOUNT = 4;
+const INSTRUMENT_AMOUNT = 6;
+const TRACK_AMOUNT = 4;
 const SEQUENCE_LENGTH = 16;
 
 const DEFAULT_CODE = `import("stdfaust.lib");
@@ -34,13 +34,11 @@ declare copyright 	"(c)GRAME 2006";
  
 import("stdfaust.lib");
 
-pitchshifter = 
-  vgroup(
-    "Pitch Shifter", 
+pitchshifter = vgroup("Pitch Shifter", 
     ef.transpose(
         hslider("window", 1000, 50, 10000, 1) : si.smoo,
         hslider("xfade", 10, 1, 10000, 1) : si.smoo,
-        hslider("shift", 0, -72, +72, 0.1) : si.smoo
+        hslider("shift", 0, -72, +72, 0.1)
     )
   );
 
@@ -60,7 +58,7 @@ process = dm.freeverb_demo;`
 export {
   ROOT_FREQUENCY,
   INSTRUMENT_AMOUNT,
-  SEQUENCE_AMOUNT,
+  TRACK_AMOUNT,
   SEQUENCE_LENGTH,
   DEFAULT_CODE,
   PITCHSHIFTER,

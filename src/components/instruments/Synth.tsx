@@ -3,7 +3,7 @@ import {  produce } from "solid-js/store"
 import { Portal } from "solid-js/web"
 import { actions, setStore, store } from "../../Store";
 import { Synth as SynthType } from "../../types"
-import {Button} from "../UI_elements";
+import {Button} from "../UIElements";
 import zeptoid from "zeptoid"
 import randomColor from "../../helpers/randomColor";
 
@@ -101,27 +101,30 @@ const SaveModal = (props: {setSaveMenuOpened: (boolean: boolean) => void, codeTi
     const [saveMenuOpened, setSaveMenuOpened] = createSignal(false);
 
     const setCode = async (code: string) => {
-        const [i,j] = store.selection.instrumentIndices
-        actions.setInstrument(i,j, produce((instrument) => (instrument as SynthType).code = code))
+      actions.setInstrument(store.selection.instrumentIndex, produce((instrument) => (instrument as SynthType).code = code))
     }
 
     const setNode = async () => {
-        if(!store.context || !props.instrument.code) return;
+      const code = props.instrument.code
+      if(!store.context || !code) return;
 
-        const [i,j] = store.selection.instrumentIndices
-        const node = await actions.createFaustNode(props.instrument.code)
+      const dsp = await actions.compileFaust(code);
+      if(!dsp) return;
+      // const factory = actions.createFactory(dsp, ""))
+      const node = await actions.createFaustNode(dsp)
+      if(!node) {
+        actions.setSelectedInstrument("error", "can not compile")
+        return
+      }
 
-        if(!node) {
-          setStore("instruments", i, j, "error", "can not compile")
-          return
-        }
+      if(store.context)
+          node.connect(store.context.destination)
+      if(props.instrument.node)
+          props.instrument.node.disconnect();
 
-        if(store.context)
-            node.connect(store.context.destination)
-        if(props.instrument.node)
-            props.instrument.node.disconnect();
-        setStore("instruments", i, j, "node", node)
-        setStore("instruments", i, j, "error", undefined)
+      actions.setSelectedInstrument("node", node)
+      actions.setSelectedInstrument("error", undefined)
+
     }
 
     createEffect(setNode)
