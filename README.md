@@ -32,3 +32,5 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
 - [ ] automations
 - [ ] save set
 - [ ] record live / render set
+
+🚧 still under construction, but if you want to go ahead and play around with it, please do! 🚧
