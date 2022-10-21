@@ -26,7 +26,7 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
 - [x] fx chain with Faust
   - [x] drag'n'drop fx into track or instrument's fx chain
   - [x] edit and recompile Faust code fx
-- [x] CodeMirror6 for Faust
+- [x] code-editor for Faust (CodeMirror6)
   - [x] synthax-highlighting and completions
   - [ ] error handling
 - [ ] automations
