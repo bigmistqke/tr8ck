@@ -49,12 +49,12 @@ export default (props: {
       !props.compilingIds.includes(id)
       && !props.fxChain.find(fx => fx.id === id)
     ){
-      const factory = store.faustFactories.find(fx => fx.name === name);
+      const factory = store.faustFactories.find(fx => fx.dsp.dspMeta.name === name);
       if(factory === undefined) return;   
 
       const node = {factory, id, parameters: deepClone(parameters), active}
 
-      props.createNodeAndAddToFxChain(node, props.fxChain.length)
+      props.createNodeAndAddToFxChain(node, props.fxChain.length - 1)
     }
 
     return;
@@ -62,7 +62,7 @@ export default (props: {
 
   const dragleave = (e: DragEvent) => {
     e.preventDefault()
-    console.log(e.target);
+
     // if((e.target as HTMLElement).id === store.dragging.fx?.id) return;
     dragCount--;
 
@@ -71,7 +71,7 @@ export default (props: {
     if(draggingFx === undefined) return;
     const {name, id, detachable} = draggingFx;
 
-    console.log('dragleave', detachable, dragCount);
+
 
     if(detachable && dragCount === 0){
       props.removeNodeFromFxChain(id)

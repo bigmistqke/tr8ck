@@ -1,21 +1,23 @@
 import deepClone from "deep-clone";
-import Faust2WebAudio, { Faust } from "faust2webaudio";
+import Faust2WebAudio, { Faust, FaustAudioWorkletNode } from "faust2webaudio";
 import { TCompiledDsp } from "faust2webaudio/src/types";
 import randomColor from "randomColor";
-import { batch } from "solid-js";
+import { batch, createEffect, createMemo, createSignal, untrack } from "solid-js";
 import { createStore, produce, StoreSetter } from "solid-js/store";
 import zeptoid from "zeptoid";
 
-import { INSTRUMENT_AMOUNT, PITCHSHIFTER, REVERB, ROOT_FREQUENCY, SEQUENCE_LENGTH, TRACK_AMOUNT } from "./constants";
+import { DEFAULT_CODES, FXS, INSTRUMENT_AMOUNT, PITCHSHIFTER, REVERB, ROOT_FREQUENCY, SEQUENCE_LENGTH, TRACK_AMOUNT } from "./constants";
 import collectParameters from "./faust/collectParameters";
 
 import bpmToMs from "./helpers/bpmToMs";
 import cloneAudioBuffer from "./helpers/cloneAudioBuffer";
 import ftom from "./helpers/ftom";
 import getLocalPosition from "./helpers/getLocalPosition";
-import { FaustFactory, FxNode, FxParameter, Instrument, Note, Pattern, Sampler, Track, Waveform } from "./types";
+import { FaustFactory, FaustElement, FxParameter, Instrument, Note, Pattern, Sampler, Track, Waveform } from "./types";
 import audioBufferToWaveform from "./waveform/audioBufferToWaveform";
 import ARRAY from "./helpers/ARRAY";
+import Initialized from "./helpers/Initialized";
+import watch from "./helpers/watch";
 
 
 const initSequence = () : Note[] => 
@@ -163,18 +165,32 @@ const initKeyboard = () => {
 
 const compileFaust = (code: string) => {
   try{
-    
     return store.faust?.compileCodes(code, ["-I", "libraries/"], true)
   }catch(err){
     console.error("code can not comipe: ", code, err)
   }}
-const createFactory = (dsp: TCompiledDsp, name: string) => ({
-  dsp: Object.setPrototypeOf(dsp, {}),
-  name,
-  parameters: collectParameters(dsp),
-  id: zeptoid()
-})
-const addToFxFactories = (fx: FaustFactory) => setStore("faustFactories", (faustFactories) => [...faustFactories, fx])
+const createFactory = (dsp: TCompiledDsp) => {
+  const f = {
+    dsp: Object.setPrototypeOf(dsp, {}),
+    name: () => f.dsp.dspMeta.name,
+    parameters: [],
+    id: zeptoid()
+  }
+
+  const [factory, setFactory] = createStore<FaustFactory>(f)
+
+  createEffect(()=>{
+    const dsp = factory.dsp;
+    setFactory("parameters", collectParameters(dsp))
+  })  
+
+  return factory
+}
+const addToFaustFactories = (fx: FaustFactory) => setStore("faustFactories", (faustFactories) => [...faustFactories, fx])
+
+const updateFaustFactory = (id: string, dsp: TCompiledDsp) => {
+  setStore("faustFactories", (factory) => factory.id === id, "dsp", Object.setPrototypeOf(dsp, {}))
+}
 
 
 /* const compileFaust = async (code: string, name: string) =>  {
@@ -198,6 +214,8 @@ const createFaustNode = async (dsp: TCompiledDsp) : Promise<Faust2WebAudio.Faust
   if(!store.faust || !store.context) return undefined
   const optionsIn = { compiledDsp: dsp, audioCtx: store.context, args: { "-I": "libraries/" }};
 
+  // TODO: this is some hacky way to not get errors when i create multiple nodes from the same factory
+  // probably best to look into faust2webaudio and improve the code
   dsp.shaKey += zeptoid();
 
   const node = await store.faust.getAudioWorkletNode(optionsIn);
@@ -212,48 +230,94 @@ const getSelectedInstrument = () => store.instruments[store.selection.instrument
 const initFx = async () => {
   setStore("faustFactories", []);
 
-  const [reverb, pitchshifter] = await Promise.all([
+  const defaultFxs = await Promise.all(FXS.map(code => compileFaust(code)))
+  defaultFxs.forEach(dsp => {
+    if(!dsp) return;
+    addToFaustFactories(createFactory(dsp));
+  })
+/*   const [reverb, pitchshifter] = await Promise.all([
     compileFaust(REVERB),
     compileFaust(PITCHSHIFTER)
   ])
 
-  
-
-  if(reverb) addToFxFactories(createFactory(reverb, "reverb"))
-  if(pitchshifter) addToFxFactories(createFactory(pitchshifter, "pitchshifter"))
-
+  if(reverb) addToFaustFactories(createFactory(reverb, "reverb"))
+  if(pitchshifter) addToFaustFactories(createFactory(pitchshifter, "pitchshifter")) */
 }
 
+const createNothing = async () => {
+  const factory = store.faustFactories.find(factory => factory.name() === "nothing")
+  if(!factory) return;
+  const element =  await createFaustElementFromFaustFactory({
+    factory,
+    id: zeptoid(),
+    active: true
+  })
+  return element
+}
+
+const createNothings = async () => {
+  const nothing1 = await createNothing();
+  const nothing2 = await createNothing();
+  return [nothing1, nothing2]
+}
 
 
 const initTracks = async () => {
   batch(()=> {
-    const compiledPitchshifter = store.faustFactories.find(fx => fx.name === "pitchshifter");
+    const pitchshifterFactory = store.faustFactories.find(fx => fx.dsp.dspMeta.name === "pitchShifter");
+    const nothingFactory = store.faustFactories.find(factory => factory.name() === "nothing")
 
-    if(!compiledPitchshifter) return;
+    if(!pitchshifterFactory || !nothingFactory) return;
   
-    store.tracks.forEach(async (_, index) => {
+    store.tracks.forEach(async (track, index) => {
+      await createNodeAndAddToFxChainTrack({
+        factory: nothingFactory, 
+        id: zeptoid(), 
+        trackIndex: index,
+        detachable: false,
+        active: true
+      }, 0, false)
       const pitchshifter = await createNodeAndAddToFxChainTrack({
-        factory: compiledPitchshifter, 
+        factory: pitchshifterFactory, 
         id: "pitchshifter", 
         trackIndex: index,
         detachable: false,
         active: true
-      }, 0)
+      }, 0, false)
+      await createNodeAndAddToFxChainTrack({
+        factory: nothingFactory, 
+        id: zeptoid(), 
+        trackIndex: index,
+        detachable: false,
+        active: true
+      }, 0, false)
 
-      
+      if(!pitchshifter || !store.context) return;
 
-      if(!pitchshifter) return;
+      // track.fxChain[0].node.connect(store.context.destination);
 
       setStore("tracks", index, "pitchshifter", pitchshifter.node);
+      updateFxChain(track.fxChain, store.context.destination)
+
     })
   })
 }
 
+
 const initInstruments = async () => {
+
+  const nothing = store.faustFactories.find(factory => factory.name() === "nothing")
+  if(!nothing){
+    console.error("could not find nothing");
+    return 
+  }
+
   if(!store.context) return;
   for(let i = 0; i < INSTRUMENT_AMOUNT; i++){
-    const fxChains = new Array(store.tracks.length).fill(0).map(v=>[]);
+ 
+
+    const fxChains = new Array(store.tracks.length).fill(0).map(() => [])
+
     setStore("instruments", i, {
       active: true,
       index: i,
@@ -270,9 +334,19 @@ const initInstruments = async () => {
       waveform: undefined,
       color: randomColor(),
       fxChains: fxChains,
+      nothings: [],
       speed: 1,
       inverted: false,
       compilingIds: []
+    })
+
+    batch(() => {
+      store.tracks.forEach(async (_, index) => {
+        const [nothing1, nothing2] = await createNothings()
+        if(!nothing1 || !nothing2) return
+        setStore("instruments", i, "fxChains", index, [nothing1, nothing2])
+        updateFxChain(store.instruments[i].fxChains[index], store.context!.destination)
+      })
     })
   }
 }
@@ -396,48 +470,148 @@ const copySelectedPattern = () => {
 }
 
 
-const createFxNodeFromFaustFactory = async (
+const createFaustElementFromFaustFactory = async (
   {
-    factory, id, detachable, active
+    factory, id, detachable, active, parameters
   } 
   : {
     factory: FaustFactory, 
     id: string, 
     detachable?: boolean
     active: boolean
+    parameters?: FxParameter[]
   }
 
-) : Promise<FxNode | undefined>=> {
-  const faustNode = await createFaustNode(factory.dsp);
-  if(!faustNode) return undefined; 
-  return {
+) : Promise<FaustElement | undefined> => {
+  const n = await createFaustNode(factory.dsp);
+  if(!n) return;
+  // const [node, setNode] = createSignal(n);
+
+  const initialElement = {
     id,
-    node: faustNode,
-    name: factory.name,
-    parameters: deepClone(factory.parameters),
+    factoryId: factory.id,
+    node: n,
+    name: () => initialElement.node.dspMeta.name,
+    parameters: parameters || deepClone(factory.parameters),
     prev: undefined,
     detachable: detachable === undefined ? true : detachable,
-    active
+    active,
+    connection: undefined
+  };
+
+  const [element, setElement] = createStore<FaustElement>(initialElement)
+
+
+  let init = false;
+  createEffect(async () =>{ 
+    // needed to trigger reactivity;
+    const dsp = factory.dsp
+
+    if(!init) {
+      init = true;
+      return;
+    }
+    if(!store.context) return;
+    const node = await createFaustNode(dsp)
+    if(!node) return;
+    setElement("node", node)
+    node.connect(element.prev || store.context?.destination)
+  })
+
+  const equal = (array1: string[], array2: string[]) => {
+    if(array1.length !== array2.length) return false;
+    let result = true;
+    array1.some((value) => {
+      if(array2.indexOf(value) === -1){
+        result = false;
+        return true;
+      }
+    })
+    return result;
   }
+
+  const equalParameters = (parameters1: FxParameter[], parameters2: FxParameter[]) => {
+    const labels1 = parameters1.map(v => v.label);
+    const labels2 = parameters2.map(v => v.label);
+    return equal(labels1, labels2)
+  }
+
+  createEffect(() =>{ 
+    const dsp = factory.dsp
+    const newParameters = collectParameters(factory.dsp); 
+    const existingParameters = untrack(()=> element.parameters);
+
+    if(!equalParameters(newParameters, existingParameters)){
+      const mergedParameters = newParameters.map(parameter => {
+        const existingParameter = existingParameters.find(p => p.label === parameter.label)
+        return existingParameter || parameter;
+      })
+      setElement("parameters", mergedParameters)
+    }
+
+  })
+  // const faustNode = createMemo(() => createFaustNode(factory.dsp));
+  return element
 }
 
-const updateFxChain = (fxChain: FxNode[]) => {
+const getActiveElementFromFxChain = (fxChain: FaustElement[], index: number) => {
+  while(true){
+    if(fxChain[index].active) {
+      return fxChain[index]
+    }else{
+      index--;
+    }
+    // TODO: change in case we change fxChain[0] being nothing
+    if(index < 0) return fxChain[0];
+  }
+
+
+}
+
+const updateFxChain = (fxChain: FaustElement[], rootNode?: FaustAudioWorkletNode | AudioDestinationNode) => {
+
   const [_, setFxChain] = createStore(fxChain);
   const context = store.context;
   if(!context) return
-  fxChain.forEach((fxNode: FxNode, index: number) => {
-    if(index === 0) return
-    const prev = /* index === 0 ? context.destination : */ fxChain[index - 1].node
-    if(fxNode.prev === prev) return;
 
-    
-
-    if(fxNode.prev){
-      fxNode.node.disconnect(fxNode.prev);
+  fxChain.forEach((fxElement: FaustElement, index: number) => {
+    if(index === 0) {
+      if(!rootNode) return;
+      if(fxElement.connection !== rootNode){
+        if(fxElement.connection)
+          fxElement.node.disconnect(fxElement.connection);
+        fxElement.node.connect(rootNode);
+        setFxChain(0, "connection", rootNode);
+      }
+      return;
     }
-    fxNode.node.connect(prev)
-    // setFxChain(index, "prev", prev);
+    
+    const node = fxElement.node;
+    const prev = getActiveElementFromFxChain(fxChain, index - 1)
+    
+    if(fxElement.active) {
+      if(fxElement.connection !== prev.node && fxElement.connection){
+        node.disconnect(fxElement.connection);
+      }
+      node.connect(prev.node)
+    }else{
+  /*    
+      if(fxElement.connection){
+        try{
+          node.disconnect(fxElement.connection);
+        }catch(err){
+          console.error("error while disconnecting node: ", err)
+        }
+      } */
+    }
+    setFxChain(index, "connection", prev?.node);
   })
+}
+
+const getEntryFxTrack = (trackIndex: number) => {
+  const fxChain = store.tracks[trackIndex].fxChain;
+  // return fxChain[fxChain.length - 1].node
+  return  getActiveElementFromFxChain(fxChain, fxChain.length - 1);
 }
 
 const createNodeAndAddToFxChainInstrument = async (
@@ -445,26 +619,49 @@ const createNodeAndAddToFxChainInstrument = async (
   {factory: FaustFactory, id: string, detachable?: boolean, parameters?: any[], active: boolean}
 ) => {
 
+
+
   if(getSelectedInstrument().compilingIds.find(compilingId => compilingId === id)) return;
   setSelectedInstrument("compilingIds", (compilingIds: string[]) => [...compilingIds, id]);
 
-  const nodes = await Promise.all(
-    getSelectedInstrument().fxChains.map((_,i) => createFxNodeFromFaustFactory({factory, id, detachable, active}))
+  const elements = await Promise.all(
+    getSelectedInstrument().fxChains.map((_,i) => createFaustElementFromFaustFactory({factory, id, detachable, active, parameters}))
   )
 
   batch(() => {
     let error;
-    nodes.forEach((fxNode, i) => {
-      if(!fxNode){
+    elements.forEach((fxElement, i) => {
+      if(!fxElement){
         error = true
         return;
       }
-      if(parameters)
-        fxNode.parameters = parameters;
-      setSelectedInstrument("fxChains", i, (fxChain: FxNode[]) =>[...fxChain, fxNode]) 
+      const [element, setElement] = createStore<FaustElement>(fxElement);
+
+      createEffect(() => {
+        const parameters = deepClone(elements[0]?.parameters);
+        if(i === 0 || !parameters) return;
+
+        setElement("parameters", parameters);
+      })
+
+      let isInitialized = Initialized();
+      createEffect(() => {
+        if(!isInitialized(elements[0]!.active)) return;
+        setElement("active", elements[0]!.active)
+
+        updateFxChain(getSelectedInstrument().fxChains[i])
+      })
+
+      createEffect(()=>{
+        element.parameters.forEach(({address, value}) => {
+          element.node.setParamValue(address, value)
+        })
+      })
+
+      setSelectedInstrument("fxChains", i, (fxChain: FaustElement[]) => ARRAY.insert(fxChain, fxChain.length - 1, element)) 
     })
     if(error) return;
-    getSelectedInstrument().fxChains.forEach(fxChain => updateFxChain(fxChain))
+    getSelectedInstrument().fxChains.forEach((fxChain, index) => updateFxChain(fxChain, getEntryFxTrack(index).node))
   })
 
   setSelectedInstrument("compilingIds", (compilingIds: string[]) => 
@@ -482,40 +679,64 @@ const createNodeAndAddToFxChainTrack = async (
     parameters?: any[]
     active: boolean
   }, 
-  index: number
+  index: number,
+  update: boolean = true
 ) => {
   const track = trackIndex ? store.tracks[trackIndex] : getSelectedTrack();
   if(track.compilingIds.find(compilingId => compilingId === id)) return;
   setSelectedTrack("compilingIds", (compilingIds: string[]) => [...compilingIds, id]);
 
-  const fxNode = await createFxNodeFromFaustFactory({factory, id, detachable, active})
-  if(!fxNode){
+  const element = await createFaustElementFromFaustFactory({factory, id, detachable, active, parameters})
+  if(!element){
     console.error("error while creating fxNode from faustFactory");
     return;
   }
 
-  if(parameters)
-    fxNode.parameters = parameters;
+/*   if(parameters)
+    fxNode.parameters = parameters; */
   
   trackIndex = trackIndex !== undefined ? trackIndex : store.selection.trackIndex;
-  setStore("tracks", trackIndex, "fxChain", (fxChain) => ARRAY.insert(fxChain, index, fxNode))
-  updateFxChain(store.tracks[trackIndex].fxChain)
+  setStore("tracks", trackIndex, "fxChain", (fxChain) => ARRAY.insert(fxChain, index, element))
+  if(update){ 
 
-  if(store.context && store.tracks[trackIndex].fxChain.length > 0)
-    store.tracks[trackIndex].fxChain[0].node.connect(store.context?.destination);
+  
+    updateFxChain(store.tracks[trackIndex].fxChain, store.context!.destination)
+  }
+  let init1 = false
+  createEffect(()=>{
+    element.parameters.forEach(({address, value, label}) => {
+      if(element.node === track.pitchshifter && label === "shift"){
+        element.node.setParamValue(address, value + track.semitones)
+      }else{
+        element.node.setParamValue(address, value)
+      }
+    })
+  })
 
+  let isInitialized = Initialized();
+  createEffect(() => {
+    if(!isInitialized(element.active)) return;
+    updateFxChain(track.fxChain, store.context!.destination)
+  })
+
+
+/*   if(store.context && store.tracks[trackIndex].fxChain.length > 0){
+
+
+    store.tracks[trackIndex].fxChain[0].node.connect(store.context?.destination); 
+  } */
   setSelectedTrack("compilingIds", (compilingIds: string[]) => 
     compilingIds.filter(compilingId => compilingId  !== id)
   );
-  return fxNode;
+  return element;
 }
 
 const removeNodeFromFxChainInstrument = (
   id: string
 ) => batch(()=>{
   getSelectedInstrument().fxChains.forEach((fxChain, index) => {
-    setSelectedInstrument("fxChains", index, (fxChain: FxNode[]) => fxChain.filter(fx => fx.id !== id))
-    updateFxChain(fxChain)
+    setSelectedInstrument("fxChains", index, (fxChain: FaustElement[]) => fxChain.filter(fx => fx.id !== id))
+    updateFxChain(fxChain, getEntryFxTrack(index).node)
   })
 })
 
@@ -525,19 +746,19 @@ const removeNodeFromFxChainTrack = (
 ) => {
   const index = trackIndex !== undefined ? trackIndex : store.selection.trackIndex;
   setStore("tracks", index, "fxChain", (fxChain) => fxChain.filter(fx => fx.id !== id))
-  setTimeout(()=>updateFxChain(store.tracks[index].fxChain), 500)
+  setTimeout(()=>updateFxChain(store.tracks[index].fxChain, store.context!.destination), 500)
 }
 
 const updateOrderFxChainTrack = (
   index1: number,
   index2: number
 ) => {
-  setSelectedTrack("fxChain", produce((fxChain: FxNode[]) => {
+  setSelectedTrack("fxChain", produce((fxChain: FaustElement[]) => {
       var element = fxChain[index1];
       fxChain.splice(index1, 1);
       fxChain.splice(index2, 0, element);
   }))
-  updateFxChain(getSelectedTrack().fxChain)
+  updateFxChain(getSelectedTrack().fxChain, store.context!.destination)
 }
 
 
@@ -546,13 +767,13 @@ const updateOrderFxChainInstrument = (
   index2: number
 ) => batch(()=>{
   getSelectedInstrument().fxChains.forEach((fxChain, index) => {
-    setSelectedInstrument("fxChains", index, produce((fxChain: FxNode[]) => {
+    setSelectedInstrument("fxChains", index, produce((fxChain: FaustElement[]) => {
       var element = fxChain[index1];
       fxChain.splice(index1, 1);
       fxChain.splice(index2, 0, element);
     
     }))
-    updateFxChain(fxChain)
+    updateFxChain(fxChain, getEntryFxTrack(index).node)
   })
 })
 
@@ -583,11 +804,13 @@ const getTrackSemitones = (frequency: number, speed: number) => {
 }
 
 const getTrackShift = (index: number) => {
-  const fxData = store.tracks[index].fxChain.find(fx => fx.name === "pitchshifter");
+  const fxData = store.tracks[index].fxChain.find(fx => fx.node === store.tracks[index].pitchshifter);
   return fxData!.parameters.find((parameter: FxParameter) => parameter.label === "shift");
 }
 
 function playSampler(instrument: Sampler, trackIndex: number, frequency: number) {
+
+  
   const {audioBuffer, selection, speed} = instrument;
 
   if(!store.context || !audioBuffer) return;
@@ -605,17 +828,25 @@ function playSampler(instrument: Sampler, trackIndex: number, frequency: number)
   const fxEntryInstrument = fxChainInstrument[fxChainInstrument.length - 1];
   const fxExitInstrument = fxChainInstrument[0];
 
+  const fxNothing = instrument.nothings[trackIndex];
+
   if(fxEntryInstrument){
+
     source.connect(fxEntryInstrument.node)
     fxExitInstrument.node.connect(fxEntryTrack?.node || store.context.destination)
+    // fxExitInstrument.node.connect(fxNothing.node)
   }else{
+
     source.connect(fxEntryTrack?.node || store.context.destination)
+    // fxEntryTrack?.node.connect(store.context.destination);
   }
   
 
   setStore("tracks", trackIndex, "source", source);
   // setStore("tracks", trackIndex, "instrument", instrument);
   setStore("tracks", trackIndex, "instrumentIndex", instrument.index)
+
+
 
   const duration = ((selection.end - selection.start) * 128  ) / audioBuffer.length * (audioBuffer.duration ) ;
   const start = (selection.start * 128) / audioBuffer.length * audioBuffer.duration;
@@ -629,6 +860,9 @@ function playSampler(instrument: Sampler, trackIndex: number, frequency: number)
   setStore("tracks", trackIndex, "frequency", frequency);
 
   store.tracks[trackIndex].pitchshifter?.setParamValue("/Pitch_Shifter/shift", totalPitch)
+
+
+
 }
 
 const playNote = (instrumentIndex: number, frequency: number, track: number) => {
@@ -707,7 +941,7 @@ const removeFromEditors = (id: string) => {
 const actions = {
   initFaust, initKeyboard, initTracks, initFx, /* initCodeMirror, */
   setBPM,
-  compileFaust, createFactory,
+  compileFaust, createFactory, updateFaustFactory,
   getSelectedInstrument, setSelectedInstrumentIndex, setSelectedInstrument,
   setInstrument, getColorInstrument, initInstruments,
   createNodeAndAddToFxChainInstrument, removeNodeFromFxChainInstrument, updateOrderFxChainInstrument,

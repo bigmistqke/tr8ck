@@ -34,7 +34,10 @@ export default (props: {
 
   const compile = async (e: MouseEvent) => {
     e.stopPropagation();
-    const dsp = await actions.compileFaust(state()?.doc.text.join("\n"))
+    // TODO: find out the proper way to do this...
+    const code = (containerRef.querySelector(".cm-content") as HTMLElement).innerText;
+    if(!code) return;
+    const dsp = await actions.compileFaust(code)
     if(!dsp) return;
     props.oncompile(dsp);
   }

@@ -23,12 +23,12 @@ export default () => {
                     onclick={() => actions.addToEditors({
                       id: fx.id,
                       code: fx.dsp.codes.dsp.code, 
-                      oncompile: (dsp) => {console.log(dsp)}
+                      oncompile: (dsp) => actions.updateFaustFactory(fx.id, dsp)
                     })}
                   >
                     edit
                   </button>
-                  <Fx  state={fx}/> 
+                  <Fx state={fx}/> 
                 </div>
               )}
             }

@@ -1,14 +1,16 @@
 import Faust2WebAudio, { FaustAudioWorkletNode } from "faust2webaudio"
 import { TCompiledCode, TCompiledDsp } from "faust2webaudio/src/types"
+import { Accessor } from "solid-js"
 
 interface InstrumentBase {
     active: true
     index: number
     pan: number
     color: string
-    fxChains: FxNode[][]
+    fxChains: FaustElement[][]
     compilingIds: string[]
     speed: number
+    nothings: FaustElement[]
 }
 
 export interface Sampler extends InstrumentBase {
@@ -67,20 +69,24 @@ export interface Waveform {
   length: number
 }
 
-export interface FxNode {
+const x = new AudioContext().destination;
+
+export interface FaustElement {
   id: string
-  name: string
+  factoryId: string
+  name: () => string
   node: FaustAudioWorkletNode
   parameters: FxParameter[]
   prev: FaustAudioWorkletNode | undefined
+  connection: FaustAudioWorkletNode | AudioDestinationNode | undefined
   detachable: boolean
   active: boolean
 }
 
 export interface FaustFactory {
   id: string
-  name: string
   dsp: TCompiledDsp
+  name: () => string
   parameters: FxParameter[]
 }
 
@@ -99,7 +105,7 @@ export interface Track {
   instrumentIndex?: number
   frequency: number
   semitones: number
-  fxChain: FxNode[]
+  fxChain: FaustElement[]
   pitchshifter?: FaustAudioWorkletNode
   compilingIds: string[]
 }

@@ -29,5 +29,10 @@ export default (props: {parameter: FxParameter, node?: FaustAudioWorkletNode}) =
   }
   const getRotation = () => (props.parameter.value - props.parameter.min) / (props.parameter.max - props.parameter.min) * 180 - 90;
 
-  return <LabeledKnob rotation={getRotation()} onupdate={update} label={props.parameter.label} class={!props.node ? "pointer-events-none" : ""}/>
+  return <LabeledKnob 
+    rotation={getRotation()} 
+    onupdate={update} 
+    label={props.parameter.label} 
+    class={`${!props.node ? "pointer-events-none" : ""}`}
+  />
 }
