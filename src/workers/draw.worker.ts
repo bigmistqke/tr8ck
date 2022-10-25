@@ -1,4 +1,4 @@
-import WaveDrawer from "../helpers/WaveDrawer";
+import WaveDrawer from "../utils/WaveDrawer";
 import { Waveform } from "../types";
 
 const drawer = new WaveDrawer();

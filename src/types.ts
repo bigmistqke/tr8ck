@@ -7,10 +7,10 @@ interface InstrumentBase {
     index: number
     pan: number
     color: string
-    fxChains: FaustElement[][]
+    fxChains: DSPElement[][]
     compilingIds: string[]
     speed: number
-    nothings: FaustElement[]
+    nothings: DSPElement[]
 }
 
 export interface Sampler extends InstrumentBase {
@@ -71,17 +71,28 @@ export interface Waveform {
 
 const x = new AudioContext().destination;
 
-export interface FaustElement {
+export interface WebAudioElement {
   id: string
-  factoryId: string
   name: () => string
-  node: FaustAudioWorkletNode
-  parameters: FxParameter[]
-  prev: FaustAudioWorkletNode | undefined
-  connection: FaustAudioWorkletNode | AudioDestinationNode | undefined
+  node: FaustAudioWorkletNode | GainNode
+  connection: FaustAudioWorkletNode | AudioDestinationNode | undefined | GainNode
   detachable: boolean
   active: boolean
 }
+
+export interface GainElement  extends WebAudioElement{
+  node: GainNode
+}
+
+export interface FaustElement extends WebAudioElement{
+  factoryId: string
+  node: FaustAudioWorkletNode
+  parameters: FxParameter[]
+}
+
+export type DSPElement = WebAudioElement | GainElement 
+
+
 
 export interface FaustFactory {
   id: string
@@ -105,7 +116,7 @@ export interface Track {
   instrumentIndex?: number
   frequency: number
   semitones: number
-  fxChain: FaustElement[]
+  fxChain: DSPElement[]
   pitchshifter?: FaustAudioWorkletNode
   compilingIds: string[]
 }

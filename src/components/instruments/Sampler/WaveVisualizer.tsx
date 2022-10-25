@@ -1,6 +1,6 @@
 import { batch, createEffect, createSignal, createUniqueId, onCleanup, onMount, Show } from "solid-js"
-import cursorEventHandler from "../../../helpers/cursorEventHandler";
-import WaveDrawer from "../../../helpers/WaveDrawer";
+import cursorEventHandler from "../../../utils/cursorEventHandler";
+import WaveDrawer from "../../../utils/WaveDrawer";
 import { actions, store } from "../../../Store";
 import { Sampler, Waveform } from "../../../types";
 import { Block, CenteredLabel } from "../../UIElements";
@@ -126,36 +126,29 @@ const WaveVisualizer = (props: {
   }
 
 
-  return (
-    <div class="h-48 flex">
-      <Block 
-        class="relative bg-selected flex-1 overflow-hidden" 
-        onmousedown={mousedown}
-      >
-        <div class="w-full h-full absolute z-20 pointer-events-none pt-4 pb-4">
-          <canvas 
-            id={id} 
-            ref={canvas!} 
-            class="flex-1 w-full h-full"
-          />
-        </div>
-        <Show 
-          when={props.instrument.waveform}
-          fallback={<CenteredLabel label="load a sample"/>}
-        >
-          
-          <WaveGrid
-            canvasWidth={canvasWidth()}
-            instrument={props.instrument}
-          />
-          <WaveSelection 
-            canvasWidth={canvasWidth()}
-            instrument={props.instrument}
-          />
-        </Show>
-        
-      </Block>
+  return (<div class="flex-1 h-full flex bg-selected transition-colors" onmousedown={mousedown}>
+    <div class="w-full h-full absolute z-20 pointer-events-none pt-4 pb-4">
+      <canvas 
+        id={id} 
+        ref={canvas!} 
+        class="flex-1 w-full h-full"
+      />
     </div>
+    <Show 
+      when={props.instrument.waveform}
+      fallback={<CenteredLabel label="load a sample"/>}
+    >
+      <WaveGrid
+        canvasWidth={canvasWidth()}
+        instrument={props.instrument}
+      />
+      <WaveSelection 
+        canvasWidth={canvasWidth()}
+        instrument={props.instrument}
+      />
+    </Show>
+  </div>
+    
   )
 }
 

@@ -19,6 +19,7 @@ export default (props: {
 
   const getName = () => "node" in props.state ? props.state.node.dspMeta.name : props.state.dsp.dspMeta.name
 
+
   const dragstart = () => {
     if(props.resetDragCount !== undefined)
       props.resetDragCount();
@@ -26,7 +27,7 @@ export default (props: {
     const id = "active" in props.state ? props.state.id : zeptoid();
     actions.setDragging("fx", {
       id, 
-      name: getName(), 
+      name: props.state.name(), 
       detachable: "detachable" in props.state ? props.state.detachable : true,
       parameters: props.state.parameters,
       active: "active" in props.state ? props.state.active : true
@@ -76,7 +77,7 @@ export default (props: {
   )
 
   return (
-    <Show when={props.state.name() !== "nothing"}>
+    <Show when={props.state.name() !== "input" && props.state.name() !== "output"}>
       <Block 
         class={`relative inline-flex flex-col p-1 h-full text-center bg-neutral-200 rounded-lg transition-opacity duration-250 ${
           props.class
@@ -95,7 +96,7 @@ export default (props: {
             <OnOffSwitch/>
             <span class="flex-1 select-none cursor-move text-neutral-500 pr-2 pl-2" style={{"font-size": "8pt", "margin-bottom": "1px"}}>
               {
-                getName()
+                props.state.name()
               }
             </span>
             <Show when={"active" in props.state}>

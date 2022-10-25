@@ -1,10 +1,10 @@
 import {  createSignal, For, onMount } from "solid-js"
 import { produce } from "solid-js/store"
 import { actions, setStore, store } from "../Store"
-import { Bar, Block } from "./UIElements"
+import { Bar, Block, Button, ButtonWithHoverOutline } from "./UIElements"
 import zeptoid from 'zeptoid';
-import getLocalPosition from "../helpers/getLocalPosition";
-import moveInArray from "../helpers/moveInArray";
+import getLocalPosition from "../utils/getLocalPosition";
+import moveInArray from "../utils/moveInArray";
 
 const Macro = () => {
     type Drag = {type: "pattern" | "composition", patternId: string, dragId: string}
@@ -152,8 +152,18 @@ const Macro = () => {
     return (
       <Block class="flex flex-0 w-64 p-2 bg-neutral-100 max-h-1/2 overflow-hidden">
         <div class="flex flex-col flex-1 gap-2">
-          <div>
-            <Bar class="bg-white">COMPOSITION</Bar>  
+          <div class="flex gap-2 h-8" >
+            <Button 
+              selected={store.playMode === "pattern"}
+              // class={`${store.playMode === "pattern" ? "bg-black text-white" : "bg-white"}`}
+              onclick={()=>actions.setPlayMode("pattern")}
+            >PATTERN</Button>  
+
+            <Button 
+              selected={store.playMode === "composition"}
+              // class={`${store.playMode === "composition" ? "bg-black text-white" : "bg-white"}`}
+              onclick={()=>actions.setPlayMode("composition")}
+            >COMPOSITION</Button>  
           </div>
           <div class="flex-1 flex gap-2 overflow-hidden">
             <div class="flex flex-col flex-1 overflow-hidden">
@@ -166,14 +176,14 @@ const Macro = () => {
                             draggable={true} 
                             ondragstart={(e)=>dragstart(e, {type: "pattern", patternId: pattern.id})}
                             ondblclick={()=>actions.setSelectedPatternId(pattern.id)}
-                            class="mb-2 rounded-xl translate-x-0"
+                            class="flex mb-2 rounded-xl translate-x-0"
                           >
-                            <Bar 
-                              class="cursor-pointer"
+                            <ButtonWithHoverOutline 
+                              class="cursor-pointer w-full flex-1"
                               style={{
                                   background: actions.getPatternColor(pattern.id) || "",
                               }}
-                            >#{i()} </Bar>
+                            >#{i()} </ButtonWithHoverOutline>
                           </div> 
                         )
                       }

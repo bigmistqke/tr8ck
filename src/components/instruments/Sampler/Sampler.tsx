@@ -1,42 +1,72 @@
-import { batch } from "solid-js"
-import fileToArrayBuffer from "../../../helpers/fileToArrayBuffer"
+import { batch, createSignal, For, Show } from "solid-js"
+import copyArrayBuffer from "../../../utils/copyArrayBuffer"
+import fileToArrayBuffer from "../../../utils/fileToArrayBuffer"
 import { actions, store } from "../../../Store"
 import { Sampler } from "../../../types"
 import arrayBufferToWaveform from "../../../waveform/arrayBufferToWaveform"
-import { ButtonBar, SliderBar } from "../../UIElements"
+import { Block, Button, ButtonBar, SliderBar } from "../../UIElements"
 import WaveVisualizer from "./WaveVisualizer"
+
+
 
 export default () => {
   let input: HTMLInputElement;
   const instrument  = () => actions.getSelectedInstrument() as Sampler;
 
-  function copy(src: ArrayBuffer)  {
-    var dst = new ArrayBuffer(src.byteLength);
-    new Uint8Array(dst).set(new Uint8Array(src));
-    return dst;
+  const [filesOpened, setFilesOpened] = createSignal(false);
+
+  const uploadFile = async () => {
+    if(!store.context) return;
+    const file = input.files![0];
+    const arrayBuffer = await fileToArrayBuffer(file)
+    setFilesOpened(false)
+    actions.addToArrayBuffers({arrayBuffer: copyArrayBuffer(arrayBuffer), name: file.name})
+    await actions.processSamplerArrayBuffer({arrayBuffer, name: file.name})
+  } 
+
+  const SampleList = () => {
+    return <div class="flex flex-col flex-1 gap-2 ">
+      <div class="flex flex-col flex-1 gap-2 p-2 rounded-xl overflow-auto">
+        <For each={store.audioBuffers}>
+        {
+          ({arrayBuffer, name}) => <div class="flex-0 h-10">
+              <Button
+              onclick={()=>actions.processSamplerArrayBuffer({arrayBuffer,name})}
+              class="h-10 w-full flex shrink-0 justify-center break-all items-center rounded-xl text-2xl cursor-pointer bg-white hover:bg-black hover:text-white"
+            >{name}</Button>
+            </div>
+        }
+      </For>
+      </div>
+      <div class="flex-0 ">
+      <Button class="h-10 w-full" onclick={()=>input.click()}>+</Button>
+  
+      </div>
+    </div>
   }
 
-  const uploadFile = () => {
-    batch(async () => {
-      if(!store.context) return;
-      const file = input.files![0];
-      const arrayBuffer = await fileToArrayBuffer(file)
-      const arrayBuffer2 = copy(arrayBuffer);
-      const waveform = await arrayBufferToWaveform(arrayBuffer, store.context)
-      actions.setSamplerWaveform(waveform);
-      const audioBuffer = await store.context.decodeAudioData(arrayBuffer2)
-      actions.setSamplerAudioBuffer(audioBuffer)
-      actions.setSamplerSelection("start", 0)
-      actions.setSamplerSelection("end", waveform.length)
-    })
-  } 
   return (
       <>
-        <WaveVisualizer instrument={instrument()} />
+        <div class="h-48 flex">
+          <Block 
+            class="relative flex-1 flex overflow-hidden" 
+          >
+            <Show when={!filesOpened()} fallback={<SampleList/>}>
+              <WaveVisualizer instrument={instrument()} />
+            </Show>
+          </Block>
+          </div>
+        
         <div class="flex gap-2">
             <input type="file" ref={input!} oninput={uploadFile} hidden/>
-            <ButtonBar onclick={() => input.click()}>load sample</ButtonBar>
-            <ButtonBar onclick={actions.revertSamplerAudiobuffer}>revert sample</ButtonBar>
+            <ButtonBar onclick={() => {
+              if(store.audioBuffers.length > 0)  
+               setFilesOpened(bool => !bool);
+              else
+                input.click();
+            }}>load</ButtonBar>
+            <ButtonBar onclick={actions.cloneSelectedInstrument}>clone</ButtonBar>
+            <ButtonBar onclick={actions.revertSamplerAudiobuffer}>revert</ButtonBar>
             <SliderBar 
               onupdate={(value) => actions.setSamplerSpeed(speed => speed + value / 100)}
             >
@@ -46,4 +76,6 @@ export default () => {
       </>
   )
 }
-  
+
+
+

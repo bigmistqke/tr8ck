@@ -1,5 +1,5 @@
 import { onMount, createSignal, createEffect, batch, onCleanup } from "solid-js"
-import cursorEventHandler from "../../../helpers/cursorEventHandler"
+import cursorEventHandler from "../../../utils/cursorEventHandler"
 import { actions, store } from "../../../Store"
 import { Sampler } from "../../../types"
 

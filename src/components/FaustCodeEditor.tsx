@@ -2,7 +2,7 @@ import { EditorState } from "@codemirror/state";
 import { TCompiledDsp } from "faust2webaudio/src/types";
 import { createSignal, onMount } from "solid-js";
 import CodeMirror from "../codemirror6/CodeMirror";
-import cursorEventHandler from "../helpers/cursorEventHandler";
+import cursorEventHandler from "../utils/cursorEventHandler";
 import { actions } from "../Store";
 import { Button } from "./UIElements";
 

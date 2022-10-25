@@ -1,13 +1,17 @@
 import { JSX, JSXElement } from "solid-js";
-import cursorEventHandler from "../helpers/cursorEventHandler";
+import cursorEventHandler from "../utils/cursorEventHandler";
 import { actions } from "../Store";
 
 
-const Button = (props: JSX.HTMLAttributes<HTMLButtonElement>) => {
+const Button = (props: JSX.HTMLAttributes<HTMLButtonElement> & {selected: boolean}) => {
   return <button
   onclick={props.onclick}
   onmousedown={props.onmousedown}
-  class={`flex-1 rounded-xl text-xs uppercase bg-default-500 bg-white hover:bg-black hover:text-white transition-colors ${props.class || ""}`}
+  class={`flex-1 rounded-xl text-xs tracking-widest uppercase hover:bg-black hover:text-white transition-colors ${
+    props.class || ""
+  } ${
+    props.selected ? "bg-black text-white" : "bg-white"
+  }`}
   style={props.style}
 >
   {props.children}
@@ -18,7 +22,7 @@ const ButtonBar =  (props: JSX.HTMLAttributes<HTMLButtonElement>)  => {
     return <Button
         onclick={props.onclick}
         onmousedown={props.onmousedown}
-        class={`h-10 text-xs ${props.class || ""}`}
+        class={`h-8 text-xs tracking-widest text-center ${props.class || ""}`}
         style={props.style}
     >
         {props.children}
@@ -44,7 +48,7 @@ const Bar =(props: JSX.HTMLAttributes<HTMLDivElement>) =>
       onmousemove={props.onmousemove}
       onmouseup={props.onmouseup}
       onwheel={props.onwheel}
-      class={`${props.class} flex flex-1 h-10 max-h-10 items-center justify-center content-center text-xs`} 
+      class={`${props.class} flex flex-1 h-8 max-h-8 items-center justify-center content-center text-center text-xs tracking-widest`} 
       style={props.style}
     >
         {props.children}
@@ -60,7 +64,7 @@ const SliderBar = (props: JSX.HTMLAttributes<HTMLDivElement> & {
     }
     return <Block 
       onmousedown={mousedown}
-      class={`${props.class} flex flex-1 h-10 content-center items-center justify-center text-xs bg-white select-none cursor-e-resize`} 
+      class={`${props.class} flex flex-1 h-8 content-center items-center justify-center text-center text-xs tracking-widest bg-white select-none cursor-e-resize`} 
       style={props.style}
     >
         {props.children}
@@ -70,13 +74,16 @@ const SliderBar = (props: JSX.HTMLAttributes<HTMLDivElement> & {
 const ButtonWithHoverOutline =  (props: JSX.HTMLAttributes<HTMLButtonElement>) => (
   <button
     onclick={props.onclick}
-    class={`flex-1 flex h-10` }
+    class={`flex-1 flex h-8` }
   >
       <div 
-          class={`flex flex-1 h-full rounded-xl justify-center items-center text-xs ${
+          class={`flex flex-1 h-full rounded-xl justify-center items-center text-xs hover:border-4 hover:border-white transition-colors ${
               props.class
           }`}
-          style={props.style}                     
+          style={{
+            ...props.style,
+            // "min-width": "75px"
+          }}                     
       >
       <span>
           {props.children}
@@ -123,7 +130,7 @@ const LabeledKnob = (props: JSX.HTMLAttributes<HTMLDivElement> & {
         <Knob rotation={props.rotation} onupdate={props.onupdate}/>
 
       </div>
-      <span class="flex-0 flex items-center self-center normal-case select-none text-neutral-500" style={{"font-size": "7pt"}}>{props.label}</span>
+    <span class="flex-0 flex items-center self-center normal-case select-none text-neutral-500 whitespace-nowrap" style={{"font-size": "7pt"}}>{props.label}</span>
     </div>
   )
 }

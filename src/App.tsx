@@ -1,46 +1,27 @@
-import { createEffect, For, onCleanup, onMount } from "solid-js"
-import {store, setStore, actions} from "./Store"
+import { createEffect, For, onCleanup, onMount, Show } from "solid-js"
+import { actions, setStore, store } from "./Store"
 
-import Piano from "./components/Piano"
 import InstrumentUI from "./components/instruments/Instrument"
 import Patterns from "./components/Patterns"
+import Piano from "./components/Piano"
 
 import { Instrument } from "./types"
-import mtof from "./helpers/mtof"
+import mtof from "./utils/mtof"
 
 import "./App.css"
-import bpmToMs from "./helpers/bpmToMs"
 import Composition from "./components/Composition"
 import FxPool from "./components/Fx/FxPool"
 
-import {basicSetup} from "CodeMirror"
 import FaustCodeEditor from "./components/FaustCodeEditor"
-import { Portal } from "solid-js/web"
-import { DEFAULT_CODE } from "./constants"
+import { Bar } from "./components/UIElements"
 
+import { TiMediaPause, TiMediaPlay, TiMediaRecord, TiMediaRecordOutline, TiMediaStop } from 'solid-icons/ti'
+import { TbMicrophone, TbMicrophone2 } from 'solid-icons/tb'
 
 function App() {
 
 
-
-  let lastTime = performance.now();
-  let spb, c;
-  const clock = () => {
-    requestAnimationFrame(clock);
-    spb = 1000 / (store.bpm / 60 * 4)
-
-    const c = Math.floor((performance.now() - store.clockOffset) / bpmToMs(store.bpm));
-    // c = Math.floor((performance.now() - store.clockOffset)/ spb);
-
-
-    if(c > store.clock){
-
-      lastTime = performance.now();
-
-      setStore("clock", c);
-      actions.renderAudio();
-    }
-  }
+  
 
   const setSelectedColorCSS = () => {
     const instrument = actions.getSelectedInstrument();
@@ -50,7 +31,7 @@ function App() {
     }
   }
 
-  const initContext = async () => {
+/*   const initContext = async () => {
     // actions.initContext();
     window.removeEventListener("mousedown", initContext)
     await actions.initFaust()
@@ -58,19 +39,18 @@ function App() {
     await actions.initTracks()
     actions.initKeyboard();
   }
-
+ */
   const initApp = async () => {
     const root = document.documentElement;
     root.style.setProperty('--selected-color', actions.getSelectedInstrument().color);
     
-    // actions.initContext()
+    actions.initContext()
     await actions.initFaust()
     await actions.initFx()
     await actions.initInstruments()
     await actions.initTracks()
+    actions.initClock()
     actions.initKeyboard();
-
-    clock();
   }
 
   const cleanup = () => {
@@ -89,10 +69,55 @@ function App() {
     </For>
     <div class="flex flex-1 bg-neutral-200" style={{"filter": "var(--modal-filter)"}}>
       <div class="flex flex-1 h-full">
-        <Piano
-          frequency={store.selection.frequency}
-          setKey={(key) => setStore("selection", "frequency", mtof(key))}
-        />
+        <div class="flex flex-col">
+          <div class="flex-0 p-2">
+            <Bar class="bg-white flex gap-2 transition-colors">
+              {/* <button class="inline-block bg-black rounded-xl w-4 h-4 margin-auto align-middle"/> */}
+              <button 
+                class={`h-4 hover:text-red-500 transition-colors ${store.audioRecorder && !store.audioRecorder.toFile ? "animate-record" : ""}`}
+                onclick={() => actions.recordAudio(false)}
+                title="render to sampler 👉 shift+r"
+              >
+                <TiMediaRecordOutline class="h-4 w-4" />
+              </button>
+              <button 
+                class={`h-4 hover:text-red-500 transition-colors ${store.audioRecorder?.toFile ? "animate-record" : ""}`} 
+                onclick={() => actions.recordAudio(true)}
+                title="render to file 👉 alt+r"
+              >
+                <TiMediaRecord class="h-4 w-4" />
+              </button>
+              <button class=" h-4 hover:text-red-500 transition-colors" onclick={actions.resetPlaying}>
+                <TbMicrophone   class="h-4 w-4"/>
+              </button>
+              <button 
+                class="h-4 hover:text-red-500 transition-colors" 
+                onclick={actions.togglePlaying}
+                title="play/pause 👉 space"
+              >
+                <Show when={!store.bools.playing} fallback={
+                  <TiMediaPause class="h-4 w-4" />
+                }>
+                  <TiMediaPlay class="h-4 w-4" />
+                </Show>
+              </button>
+              <button 
+                class=" h-4 hover:text-red-500 transition-colors" 
+                onclick={actions.resetPlaying}
+                title="stop"
+              >
+                <TiMediaStop class="h-4 w-4" />
+              </button>
+              
+            </Bar>
+          </div>
+          <Piano
+              frequency={store.selection.frequency}
+              setKey={(key) => setStore("selection", "frequency", mtof(key))}
+            />
+          
+        </div>
+        
         <Patterns/>
       </div>
       <div class="flex flex-1 h-full p-2 gap-2">

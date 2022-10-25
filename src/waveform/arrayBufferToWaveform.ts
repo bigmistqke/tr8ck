@@ -1,6 +1,6 @@
 import WaveformData from "waveform-data";
 import { Waveform } from "../types";
-import normalizeArray from "../helpers/normalizeArray";
+import normalizeArray from "../utils/normalizeArray";
 
 const arrayBufferToWaveform = (arrayBuffer: ArrayBuffer, context: AudioContext) => 
   new Promise((resolve: (data: Waveform) => void, reject) => {

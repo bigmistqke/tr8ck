@@ -20,8 +20,8 @@ input, textarea{
 }
 
 * {
-  scrollbar-width: thin; /* "auto" or "thin" */
-  scrollbar-color: rgb(107, 107, 107) white; /* scroll thumb and track */
+  scrollbar-width: thin;
+  scrollbar-color: rgb(115 115 115) #fff0;
 }
 
 /* ::-webkit-scrollbar {

@@ -15,6 +15,7 @@ export default (props: {
       factory: FaustFactory
       id: string
       parameters: any[] | undefined
+      active: true
     }, 
     index: number
   ) => void
@@ -49,11 +50,13 @@ export default (props: {
       !props.compilingIds.includes(id)
       && !props.fxChain.find(fx => fx.id === id)
     ){
-      const factory = store.faustFactories.find(fx => fx.dsp.dspMeta.name === name);
+      const factory = store.faustFactories.find(fx => fx.name() === name);
       if(factory === undefined) return;   
 
       const node = {factory, id, parameters: deepClone(parameters), active}
 
+
+      
       props.createNodeAndAddToFxChain(node, props.fxChain.length - 1)
     }
 

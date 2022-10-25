@@ -15,8 +15,10 @@ specifiers:
   fals: ^1.0.5
   faust2webaudio: github:grame-cncm/faust2webaudio
   midiutils: ^0.0.4
+  pastel-color: ^1.0.3
   postcss: ^8.4.18
   randomcolor: ^0.6.2
+  solid-icons: ^1.0.2
   solid-js: ^1.5.8
   tailwindcss: ^3.1.8
   typescript: ^4.8.4
@@ -41,7 +43,9 @@ dependencies:
   deep-clone: 3.0.3
   fals: 1.0.5
   midiutils: 0.0.4
+  pastel-color: 1.0.3
   randomcolor: 0.6.2
+  solid-icons: 1.0.2_solid-js@1.5.8
   solid-js: 1.5.8
   waveform-data: 4.3.0
   wavesurfer.js: 6.3.0
@@ -1499,6 +1503,10 @@ packages:
     engines: {node: '>= 6'}
     dev: true
 
+  /pastel-color/1.0.3:
+    resolution: {integrity: sha512-VtKzbIgQUc+U0JBFcuNqcCPYfnPYZaf0VPpdqaRUaHYBwMTh3nT9ncq3gsQccqtmhlNdw1aNqZnefVvPE6dtmg==}
+    dev: false
+
   /path-parse/1.0.7:
     resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}
     dev: true
@@ -1649,6 +1657,15 @@ packages:
     resolution: {integrity: sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==}
     hasBin: true
     dev: true
+
+  /solid-icons/1.0.2_solid-js@1.5.8:
+    resolution: {integrity: sha512-Pockp4vkCFFW+uubuRpb50pqKZNzjLhUUDm5VPpcZJWSgDw7fOxnMLcO1fC2bK8l+kYbJOr52y+pB5fnoZXg3Q==}
+    engines: {node: '>= 16'}
+    peerDependencies:
+      solid-js: '*'
+    dependencies:
+      solid-js: 1.5.8
+    dev: false
 
   /solid-js/1.5.8:
     resolution: {integrity: sha512-Rm7A8msFxSQCUXMzn1YSV+y1Gavy/66s8wp52Cz9nVgsO1JYDAqbp33V4Kg8aMJZZCYhEwgHxsg8JxgIFmwouw==}

@@ -5,7 +5,7 @@ import { actions, setStore, store } from "../../Store";
 import { Synth as SynthType } from "../../types"
 import {Button} from "../UIElements";
 import zeptoid from "zeptoid"
-import randomColor from "../../helpers/randomColor";
+import {getHex} from "pastel-color";
 
 function allStorage() {
     var entries = [],
