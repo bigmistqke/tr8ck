@@ -14,9 +14,23 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
 
 - [x] composition-view
 - [x] pattern-view
-- [x] synths with Faust
-- [x] sampler
-- [x] effect chain with Faust
-- [X] synthax-highlighting and completions for Faust (CodeMirror integration)
+- [ ] synths with Faust
+  - [x] compile custom Faust dsp-code
+  - [ ] editable parameters
+- [ ] sampler
+  - [x] wave visualizer and selector
+  - [x] timestretch
+  - [x] reverse
+  - [ ] record from mic
+  - [ ] resample from set
+- [x] fx chain with Faust
+  - [x] drag'n'drop fx into track or instrument's fx chain
+  - [x] edit and recompile Faust code fx
+- [x] code-editor for Faust (CodeMirror6)
+  - [x] synthax-highlighting and completions
+  - [ ] error handling
 - [ ] automations
-- [ ] save and render set
+- [ ] save set
+- [ ] record live / render set
+
+🚧 still under construction, but if you want to go ahead and play around with it, please do! 🚧
