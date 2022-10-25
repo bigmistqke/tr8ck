@@ -1,10 +1,7 @@
 export default class{
   recorder?: MediaRecorder
-  constructor(audioNode: AudioNode, context: AudioContext){
-    let recordingStream = context.createMediaStreamDestination();
-    audioNode.connect(recordingStream);
-  
-    this.recorder = new MediaRecorder(recordingStream.stream);
+  constructor(stream: MediaStream){
+    this.recorder = new MediaRecorder(stream);
     this.recorder.start();
   }
 

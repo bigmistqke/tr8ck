@@ -11,7 +11,7 @@ import zeptoid from "zeptoid";
 import { FXS, INSTRUMENT_AMOUNT, ROOT_FREQUENCY, SEQUENCE_LENGTH, TRACK_AMOUNT } from "./constants";
 import collectParameters from "./faust/collectParameters";
 
-import { DSPElement, FaustElement, FaustFactory, FxParameter, Note, Pattern, Sampler, Track, Waveform, WebAudioElement } from "./types";
+import { DSPElement, FaustElement, FaustFactory, FxParameter, Instrument, Note, Pattern, Sampler, Track, Waveform, WebAudioElement } from "./types";
 import ARRAY from "./utils/ARRAY";
 import bpmToMs from "./utils/bpmToMs";
 import copyArrayBuffer from "./utils/copyArrayBuffer";
@@ -20,6 +20,9 @@ import getLocalPosition from "./utils/getLocalPosition";
 import Initialized from "./utils/Initialized";
 import AudioNodeRecorder from "./utils/webaudio/AudioNodeRecorder";
 import cloneAudioBuffer from "./utils/webaudio/cloneAudioBuffer";
+import { getWebAudioMediaStream } from "./utils/webaudio/getWebAudioMediaStream";
+import StreamRecorder from "./utils/webaudio/StreamRecorder";
+import MediaStreamRecorder from "./utils/webaudio/StreamRecorder";
 import arrayBufferToWaveform from "./waveform/arrayBufferToWaveform";
 import audioBufferToWaveform from "./waveform/audioBufferToWaveform";
 
@@ -53,7 +56,7 @@ const [store, setStore] = createStore<{
   rootNode?: AudioNode
   audioRecorder?: {
     recorder: AudioNodeRecorder
-    toFile: boolean
+    type: "mic" | "file" | "resample"
   }
   patterns: Pattern[]
   tracks: Track[]
@@ -90,6 +93,7 @@ const [store, setStore] = createStore<{
     playing: boolean
   }
   audioBuffers: {arrayBuffer: ArrayBuffer, name: string}[]
+  mic?: MediaStream
 }>({
   clock: -1,
   faust: undefined,
@@ -145,7 +149,8 @@ const [store, setStore] = createStore<{
   bools: {
     playing: true
   },
-  audioBuffers: []
+  audioBuffers: [],
+  mic: undefined
 })
 
 
@@ -1117,14 +1122,32 @@ const removeFromEditors = (id: string) => {
 }
 
 // let audioRecorder: ;
-const recordAudio = async (toFile: boolean) => { 
+const recordAudio = async (type: "file" | "resample" | "mic") => { 
   if(!store.context) return;
   if(!store.audioRecorder){
-    setStore("audioRecorder", {toFile, recorder: new AudioNodeRecorder(store.rootNode!, store.context)})
+
+    if(type === "mic"){
+      const microphoneStream = await getMicrophoneStream();
+      if(!microphoneStream){
+        console.error("could not create microphonestream");
+        return;
+      }
+      const recorder = new StreamRecorder(microphoneStream);
+      setStore("audioRecorder", {type, recorder})
+    }else{
+      const recorder = new AudioNodeRecorder(store.rootNode!, store.context)
+      setStore("audioRecorder", {type, recorder})
+    }
+
   }else{
     const blob = await store.audioRecorder.recorder.stop();
 
-    if(!store.audioRecorder.toFile){
+    if(store.audioRecorder.type === "file"){
+      const a = document.createElement('a');
+      a.setAttribute('href', URL.createObjectURL(blob));
+      a.setAttribute('download', "music.ogg");
+      a.click()
+    }else{
       const arrayBuffer = await blob.arrayBuffer();
       const sampler = defaultSampler(store.instruments.length);
       setStore("instruments", instruments => [...instruments, sampler] )
@@ -1133,15 +1156,17 @@ const recordAudio = async (toFile: boolean) => {
       const name = `recording_${index}`;
       actions.addToArrayBuffers({arrayBuffer, name});
       await processSelectedSamplerArrayBuffer({arrayBuffer, name})
-    }else{
-      const a = document.createElement('a');
-      a.setAttribute('href', URL.createObjectURL(blob));
-      a.setAttribute('download', "music.ogg");
-      a.click()
     }
     setStore("audioRecorder", undefined)
 
   }
+}
+
+const getMicrophoneStream = async () => {
+  if(!store.mic){
+    setStore("mic", await getWebAudioMediaStream());
+  }
+  return store.mic;
 }
 
 const togglePlaying = () => {

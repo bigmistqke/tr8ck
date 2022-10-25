@@ -74,20 +74,23 @@ function App() {
             <Bar class="bg-white flex gap-2 transition-colors">
               {/* <button class="inline-block bg-black rounded-xl w-4 h-4 margin-auto align-middle"/> */}
               <button 
-                class={`h-4 hover:text-red-500 transition-colors ${store.audioRecorder && !store.audioRecorder.toFile ? "animate-record" : ""}`}
-                onclick={() => actions.recordAudio(false)}
+                class={`h-4 hover:text-red-500 transition-colors ${store.audioRecorder && store.audioRecorder.type === "resample" ? "animate-record" : ""}`}
+                onclick={() => actions.recordAudio("resample")}
                 title="render to sampler 👉 shift+r"
               >
                 <TiMediaRecordOutline class="h-4 w-4" />
               </button>
               <button 
-                class={`h-4 hover:text-red-500 transition-colors ${store.audioRecorder?.toFile ? "animate-record" : ""}`} 
-                onclick={() => actions.recordAudio(true)}
+                class={`h-4 hover:text-red-500 transition-colors ${store.audioRecorder  && store.audioRecorder.type === "file" ? "animate-record" : ""}`} 
+                onclick={() => actions.recordAudio("file")}
                 title="render to file 👉 alt+r"
               >
                 <TiMediaRecord class="h-4 w-4" />
               </button>
-              <button class=" h-4 hover:text-red-500 transition-colors" onclick={actions.resetPlaying}>
+              <button 
+                class={`h-4 hover:text-red-500 transition-colors ${store.audioRecorder  && store.audioRecorder.type === "mic" ? "animate-record" : ""}`} 
+                onclick={() => actions.recordAudio("mic")}
+              >
                 <TbMicrophone   class="h-4 w-4"/>
               </button>
               <button 

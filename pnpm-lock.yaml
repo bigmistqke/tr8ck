@@ -6,7 +6,6 @@ specifiers:
   '@codemirror/language': ^6.2.1
   '@codemirror/legacy-modes': ^6.1.0
   '@codemirror/state': ^6.1.2
-  '@formkit/auto-animate': 1.0.0-beta.3
   '@solid-codemirror/codemirror': ^1.0.4
   '@thisbeyond/solid-dnd': ^0.7.2
   autoprefixer: ^10.4.12
@@ -36,7 +35,6 @@ dependencies:
   '@codemirror/language': 6.2.1
   '@codemirror/legacy-modes': 6.1.0
   '@codemirror/state': 6.1.2
-  '@formkit/auto-animate': 1.0.0-beta.3
   '@solid-codemirror/codemirror': 1.0.4_fho3fvp2joqhwbfjrb3eab64qy
   '@thisbeyond/solid-dnd': 0.7.2_solid-js@1.5.8
   codemirror: 6.0.1_@lezer+common@1.0.1
@@ -490,10 +488,6 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
-
-  /@formkit/auto-animate/1.0.0-beta.3:
-    resolution: {integrity: sha512-glsi+ytwQpxT/Ctr9GtcIfVr4dO6mJ04mQbNU8MFSdCdqMopHtyfU5Fib0+9lNFIeR0luY4/0NW95/2R5pKsag==}
-    dev: false
 
   /@jridgewell/gen-mapping/0.1.1:
     resolution: {integrity: sha512-sQXCasFk+U8lWYEe66WxRDOE9PjVz4vSM51fTu3Hw+ClTpUSQb718772vH3pyS5pShp6lvQM7SxgIDXXXmOX7w==}
