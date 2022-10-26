@@ -27,15 +27,15 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
   - [x] reverse
   - [x] record from mic
   - [x] resample from set
-- [x] fx chain with Faust
+- [x] fx with Faust
   - [x] drag'n'drop fx into track or instrument's fx chain
   - [x] edit and recompile Faust code fx
+  - [ ] modulate/sidechain-wrapper
 - [x] code-editor for Faust (CodeMirror6)
   - [x] synthax-highlighting and completions
   - [ ] error handling
 - [ ] automations
 - [ ] save set
-  - [
 - [x] record live / render set
 
 🚧 still under construction, but if you want to go ahead and play around with it, please do! 🚧
