@@ -5,7 +5,7 @@ const INSTRUMENT_AMOUNT = 7;
 const TRACK_AMOUNT = 8;
 const SEQUENCE_LENGTH = 16;
 
-const DEFAULT_CODE = `import("stdfaust.lib");
+const DEFAULT_SYNTH = `import("stdfaust.lib");
 bubble(f0,trig) = os.osc(f) * (exp(-damp*time) : si.smooth(0.99))
   with {
     damp = 0.043*f0 + 0.0014*f0^(3/2);
@@ -20,6 +20,11 @@ process = t : g * bubble(hslider("freq", 600, 150, 2000, 1));
 g = t,1 : min;
 t = button("drop");
 `
+
+const DEFAULT_FX = `import("stdfaust.lib");
+declare name "new_fx";
+
+process = _,_;`
 
 const PITCHSHIFTER = 
 `declare name 		"pitchShifter";
@@ -56,7 +61,7 @@ import("stdfaust.lib");
 process = dm.freeverb_demo;`
 
 const FXS = [
-  `declare name "fuzz";
+`declare name "fuzz";
 declare author "Bram de Jong (from musicdsp.org)";
 declare version "1.0";
 
@@ -81,31 +86,31 @@ declare description "Freeverb demo application.";
 import("stdfaust.lib");
 
 process = dm.freeverb_demo;`,
-  `declare name 		"pitchShifter";
-  declare version 	"1.0";
-  declare author 		"Grame";
-  declare license 	"BSD";
-  declare copyright 	"(c)GRAME 2006";
+
+`declare name 		"pitchShifter";
+declare version 	"1.0";
+declare author 		"Grame";
+declare license 	"BSD";
+declare copyright 	"(c)GRAME 2006";
+
+  //--------------------------------------
+  // very simple real time pitch shifter
+  //--------------------------------------
   
-   //--------------------------------------
-   // very simple real time pitch shifter
-   //--------------------------------------
-   
-  import("stdfaust.lib");
-  
-  pitchshifter = vgroup("Pitch Shifter", 
-      ef.transpose(
-          hslider("window", 1000, 50, 10000, 1) : si.smoo,
-          hslider("xfade", 10, 1, 10000, 1) : si.smoo,
-          // best to not change this parameter-name because otherwise pitchshifting and timestretching will not work
-          hslider("shift", 0, -72, +72, 0.1)
-      )
-    );
-  
-  process = pitchshifter, pitchshifter;`,
-  `declare name "nothing";
-  process = _,_;`, `
-  declare name 	"smoothDelay";
+import("stdfaust.lib");
+
+pitchshifter = vgroup("Pitch Shifter", 
+    ef.transpose(
+        hslider("window", 1000, 50, 10000, 1) : si.smoo,
+        hslider("xfade", 10, 1, 10000, 1) : si.smoo,
+        // best to not change this parameter-name because otherwise pitchshifting and timestretching will not work
+        hslider("shift", 0, -72, +72, 0.1)
+    )
+  );
+
+process = pitchshifter, pitchshifter;`,
+
+`declare name 	"smoothDelay";
 declare author 	"Yann Orlarey";
 declare copyright "Grame";
 declare version "1.0";
@@ -129,10 +134,7 @@ process = par(i, 2, voice)
 		interp 	= hslider("interpolation[unit:ms][style:knob]",10,1,100,0.1)*ma.SR/1000.0; 
 		dtime	= hslider("delay[unit:ms][style:knob]", 0, 0, 5000, 0.1)*ma.SR/1000.0;
 		fback 	= hslider("feedback[style:knob]",0,0,100,0.1)/100.0; 
-	};
-
-
-`
+	};`
 ]
 
 
@@ -141,7 +143,8 @@ export {
   INSTRUMENT_AMOUNT,
   TRACK_AMOUNT,
   SEQUENCE_LENGTH,
-  DEFAULT_CODE,
+  DEFAULT_SYNTH,
+  DEFAULT_FX,
   PITCHSHIFTER,
   REVERB,
   FXS

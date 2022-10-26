@@ -19,17 +19,11 @@ const Macro = () => {
         if(!dragId)
             dragId = zeptoid();
 
-
-
         setDrag({
             type,
             patternId,
             dragId
         })
-
-      /*   e.dataTransfer!.setData("type", type);
-        e.dataTransfer!.setData("pattern-id", patternId);
-        e.dataTransfer!.setData("drag-id", dragId); */
     }
 
     const drop = (e: DragEvent) => {
@@ -41,10 +35,6 @@ const Macro = () => {
 
         if(!e.dataTransfer) return;
 
-
-
-        // const dragType = e.dataTransfer.getData("type")
-
         const d = drag();
 
         if(!d) return;
@@ -53,11 +43,7 @@ const Macro = () => {
 
         const targetType = (e.target as HTMLElement).getAttribute("data-type")
 
-
-
         if(dragType === "pattern" && targetType === "composition"){
-/*             const dragId = e.dataTransfer.getData("drag-id")
-            const patternId = e.dataTransfer.getData("pattern-id") */
 
             const targetId = (e.target as HTMLElement).getAttribute("data-id")
 
@@ -89,8 +75,8 @@ const Macro = () => {
 
             return;
         }
+        
         if(dragType === "composition" && targetType === "composition"){
-            // const dragId = e.dataTransfer.getData("drag-id")
             const targetId = (e.target as HTMLElement).getAttribute("data-id")
 
             if(!targetId) return
@@ -101,8 +87,6 @@ const Macro = () => {
             const dragIndex = actions.getBlockIndex(dragId);
             const targetIndex = actions.getBlockIndex(targetId);
             const patternId = e.dataTransfer.getData("pattern-id")
-
-
 
             if(position.percentage.y < 50 && dragIndex !== targetIndex - 1){
                 if(dragIndex === -1){

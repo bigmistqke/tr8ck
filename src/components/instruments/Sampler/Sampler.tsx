@@ -27,7 +27,7 @@ export default () => {
   const SampleList = () => {
     return <div class="flex flex-col flex-1 gap-2 ">
       <div class="flex flex-col flex-1 gap-2 p-2 rounded-xl overflow-auto">
-        <For each={store.audioBuffers}>
+        <For each={store.arrayBuffers}>
         {
           ({arrayBuffer, name}) => <div class="flex-0 h-10">
               <Button
@@ -47,7 +47,7 @@ export default () => {
 
   return (
       <>
-        <div class="h-48 flex">
+        <div class="h-32 flex">
           <Block 
             class="relative flex-1 flex overflow-hidden" 
           >
@@ -60,7 +60,7 @@ export default () => {
         <div class="flex gap-2">
             <input type="file" ref={input!} oninput={uploadFile} hidden/>
             <ButtonBar onclick={() => {
-              if(store.audioBuffers.length > 0)  
+              if(store.arrayBuffers.length > 0)  
                setFilesOpened(bool => !bool);
               else
                 input.click();

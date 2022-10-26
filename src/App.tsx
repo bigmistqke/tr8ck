@@ -116,7 +116,7 @@ function App() {
           </div>
           <Piano
               frequency={store.selection.frequency}
-              setKey={(key) => setStore("selection", "frequency", mtof(key))}
+              setKey={(key) => actions.setSelectedFrequency(mtof(key))}
             />
           
         </div>

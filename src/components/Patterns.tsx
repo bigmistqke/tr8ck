@@ -42,10 +42,13 @@ export default () => {
           <div class="flex-1 flex gap-2 min-h-full">
             <For each={actions.getSelectedPattern()?.sequences}>
               {
-                sequence => 
+                (sequence, index) => 
                   <Pattern
                     amount={sequence.length}
                     sequence={sequence}
+                    active={
+                      store.solos.length === 0 || store.solos.includes(index())
+                    }
                   />
               }
             </For>
@@ -64,8 +67,13 @@ export default () => {
                 (track, index) => (<div class="flex gap-1 flex-1">
                   <div class="flex flex-0  w-4 p-0.5">
                     <Button 
-                        class={`flex-1 `}
-                        onclick={() => actions.setSelectedTrackIndex(index())}
+                        class={`flex-1 ${
+                          store.solos.includes(index()) 
+                            ? "bg-black" 
+                            : "bg-white"
+                        }`}
+                        title="solo"
+                        onclick={() => actions.toggleTrackSolo(index())}
                       />
                   </div>
                   <Button 

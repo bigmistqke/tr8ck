@@ -1,6 +1,6 @@
 import { For } from "solid-js"
 import { actions, store } from "../../Store"
-import { ButtonWithHoverOutline } from "../UIElements"
+import { AddButton, ButtonWithHoverOutline } from "../UIElements"
 
 const InstrumentSelection = () => {
     return (
@@ -26,13 +26,8 @@ const InstrumentSelection = () => {
                 } 
               </For>
             </div>
-            
-          <ButtonWithHoverOutline
-              class="flex-0 bg-white hover:bg-black hover:text-white"
-              onclick={actions.addInstrument}
-            >
-              +
-            </ButtonWithHoverOutline>
+          <AddButton onclick={actions.addInstrument}/>
+          
         </div>
 
     </div>

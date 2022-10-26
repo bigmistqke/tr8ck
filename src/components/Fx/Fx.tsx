@@ -17,17 +17,16 @@ export default (props: {
 }) => {
   const [_, setState] = createStore(props.state)
 
-  const getName = () => "node" in props.state ? props.state.node.dspMeta.name : props.state.dsp.dspMeta.name
-
+  const getName = () => "dspMeta" in props.state?.node ? props.state.node.dspMeta.name : props.state.initialName
 
   const dragstart = () => {
     if(props.resetDragCount !== undefined)
       props.resetDragCount();
-    // "active" in props.state to check if it is an FaustNode or a FaustFactory
+    // "active" in props.state typeguard if it is an FaustNode or a FaustFactory
     const id = "active" in props.state ? props.state.id : zeptoid();
     actions.setDragging("fx", {
       id, 
-      name: props.state.name(), 
+      name: props.state.initialName, 
       detachable: "detachable" in props.state ? props.state.detachable : true,
       parameters: props.state.parameters,
       active: "active" in props.state ? props.state.active : true
@@ -54,7 +53,6 @@ export default (props: {
   }
 
   const getOpacity = () => {
-    // if(!mounted()) return "opacity-0";
     if("active" in props.state && !props.state.active ) return "opacity-50"
     return ""
   }
@@ -76,8 +74,18 @@ export default (props: {
     </Show>
   )
 
+  createEffect(() => {
+    console.log("props.state.name", props.state.initialName)
+
+  })
+
+  createEffect(() => {
+    console.log("getName()", getName())
+
+  })
+
   return (
-    <Show when={props.state.name() !== "input" && props.state.name() !== "output"}>
+    <Show when={props.state.initialName !== "input" && props.state.initialName !== "output"}>
       <Block 
         class={`relative inline-flex flex-col p-1 h-full text-center bg-neutral-200 rounded-lg transition-opacity duration-250 ${
           props.class
@@ -96,7 +104,7 @@ export default (props: {
             <OnOffSwitch/>
             <span class="flex-1 select-none cursor-move text-neutral-500 pr-2 pl-2" style={{"font-size": "8pt", "margin-bottom": "1px"}}>
               {
-                props.state.name()
+                getName() || props.state.initialName 
               }
             </span>
             <Show when={"active" in props.state}>

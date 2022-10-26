@@ -50,7 +50,7 @@ export default (props: {
       !props.compilingIds.includes(id)
       && !props.fxChain.find(fx => fx.id === id)
     ){
-      const factory = store.faustFactories.find(fx => fx.name() === name);
+      const factory = store.faustFactories.find(fx => fx.initialName === name);
       if(factory === undefined) return;   
 
       const node = {factory, id, parameters: deepClone(parameters), active}
