@@ -12,8 +12,12 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
 
 # TODO
 
-- [x] composition-view
 - [x] pattern-view
+- [x] composition-view
+  - [x] compose a sequence of patterns
+  - [ ] group patterns together
+  - [ ] loop groups
+  - [ ] copy/paste groups
 - [ ] synths with Faust
   - [x] compile custom Faust dsp-code
   - [ ] editable parameters
@@ -21,8 +25,8 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
   - [x] wave visualizer and selector
   - [x] timestretch
   - [x] reverse
-  - [ ] record from mic
-  - [ ] resample from set
+  - [x] record from mic
+  - [x] resample from set
 - [x] fx chain with Faust
   - [x] drag'n'drop fx into track or instrument's fx chain
   - [x] edit and recompile Faust code fx
@@ -31,6 +35,7 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
   - [ ] error handling
 - [ ] automations
 - [ ] save set
-- [ ] record live / render set
+  - [
+- [x] record live / render set
 
 🚧 still under construction, but if you want to go ahead and play around with it, please do! 🚧
