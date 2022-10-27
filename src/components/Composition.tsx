@@ -134,20 +134,20 @@ const Macro = () => {
 
 
     return (
-      <Block class="flex flex-0 w-64 p-2 bg-neutral-100 max-h-1/2 overflow-hidden">
+      <Block class="flex flex-0 w-48 p-2 bg-neutral-100 max-h-1/2 overflow-hidden">
         <div class="flex flex-col flex-1 gap-2">
           <div class="flex gap-2 h-8" >
             <Button 
               selected={store.playMode === "pattern"}
               // class={`${store.playMode === "pattern" ? "bg-black text-white" : "bg-white"}`}
               onclick={()=>actions.setPlayMode("pattern")}
-            >PATTERN</Button>  
+            >LOOP</Button>  
 
             <Button 
               selected={store.playMode === "composition"}
               // class={`${store.playMode === "composition" ? "bg-black text-white" : "bg-white"}`}
               onclick={()=>actions.setPlayMode("composition")}
-            >COMPOSITION</Button>  
+            >COMP</Button>  
           </div>
           <div class="flex-1 flex gap-2 overflow-hidden">
             <div class="flex flex-col flex-1 overflow-hidden">

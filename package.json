@@ -25,7 +25,6 @@
     "@codemirror/language": "^6.2.1",
     "@codemirror/legacy-modes": "^6.1.0",
     "@codemirror/state": "^6.1.2",
-    "@solid-codemirror/codemirror": "^1.0.4",
     "@thisbeyond/solid-dnd": "^0.7.2",
     "codemirror": "^6.0.1",
     "deep-clone": "^3.0.3",

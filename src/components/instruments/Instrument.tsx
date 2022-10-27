@@ -21,8 +21,16 @@ const Instrument = () => {
             <div class="flex flex-1 flex-col gap-2">
                 <div class="flex  text-black gap-2">
                     <Bar class="bg-selected select-none">#{store.selection.instrumentIndex}</Bar>
-                    <Bar class="flex-1 text-center bg-white select-none">{type()?.toUpperCase()}</Bar>
-                    <ButtonBar class="flex-1 text-center bg-white" onclick={actions.toggleTypeSelectedInstrument}>change instrument</ButtonBar>
+                    <ButtonBar 
+                      class="flex-1 text-center bg-white select-none"
+                      selected={actions.getSelectedInstrument().type === "sampler"}
+                      onClick={() => actions.setTypeSelectedInstrument("sampler")}
+                    >Sampler</ButtonBar>
+                    <ButtonBar 
+                      class="flex-1 text-center bg-white" 
+                      onClick={() => actions.setTypeSelectedInstrument("synth")}
+                      selected={actions.getSelectedInstrument().type === "synth"}
+                    >Synth</ButtonBar>
                 </div>
                 <Switch fallback={<>error type of instrument is undefined</>}>
                     <Match when={type() === "sampler"}>

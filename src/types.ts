@@ -35,7 +35,8 @@ export interface Sampler extends InstrumentBase {
 export interface Synth extends InstrumentBase {
   type: "synth"
   code: string
-  node: Faust2WebAudio.FaustAudioWorkletNode | undefined
+  element: FaustElement
+  // node: Faust2WebAudio.FaustAudioWorkletNode | undefined
   error?: string
 }
 export type Instrument = Sampler | Synth
@@ -94,7 +95,7 @@ export interface GainElement extends WebAudioElement {
 export interface FaustElement extends WebAudioElement {
   factoryId: string
   node: FaustAudioWorkletNode
-  parameters: FxParameter[]
+  parameters: FaustParameter[]
 }
 
 export type DSPElement = WebAudioElement | GainElement
@@ -103,10 +104,10 @@ export interface FaustFactory {
   id: string
   node: TCompiledDsp
   initialName: string
-  parameters: FxParameter[]
+  parameters: FaustParameter[]
 }
 
-export interface FxParameter {
+export interface FaustParameter {
   address: string
   label: string
   init: number

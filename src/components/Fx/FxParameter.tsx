@@ -2,11 +2,11 @@ import { FaustAudioWorkletNode } from "faust2webaudio";
 import { createEffect } from "solid-js";
 import { createStore } from "solid-js/store";
 import { actions } from "../../Store";
-import { FxParameter } from "../../types";
+import { FaustParameter } from "../../types";
 import { LabeledKnob } from "../UIElements";
 
-export default (props: {parameter: FxParameter, node?: FaustAudioWorkletNode}) => {
-  const [_, setParameter] = createStore<FxParameter>(props.parameter);
+export default (props: {parameter: FaustParameter, node?: FaustAudioWorkletNode}) => {
+  const [_, setParameter] = createStore<FaustParameter>(props.parameter);
 
   const update = (delta: number) => {
     if(!props.node) return;

@@ -2,10 +2,14 @@ import { createSignal, Switch, Match, Show, For, onMount, onCleanup, createUniqu
 import {  produce } from "solid-js/store"
 import { Portal } from "solid-js/web"
 import { actions, setStore, store } from "../../Store";
-import { Synth as SynthType } from "../../types"
-import {Button} from "../UIElements";
+import { FaustElement, Synth as SynthType } from "../../types"
+import {Block, Button} from "../UIElements";
 import zeptoid from "zeptoid"
-import {getHex} from "pastel-color";
+import randomColor from "../../utils/randomColor";
+import CodeMirror from "../../codemirror6/CodeMirror";
+import FxPool from "../Fx/FxPool";
+import FxChain from "../Fx/FxChain";
+import Fx from "../Fx/Fx";
 
 function allStorage() {
     var entries = [],
@@ -24,7 +28,7 @@ function allStorage() {
 
 const SynthList = (props: {setCode: (code: string | null, title: string | null) => void}) => {
     return <div
-        class={`flex flex-col gap-4 h-96 overflow-auto align-center bg-white rounded-xl p-4`}
+        class={`flex flex-col gap-4 h-48 overflow-auto align-center bg-white rounded-xl p-4`}
     >
         <For each={allStorage()}>
             {
@@ -64,12 +68,11 @@ const SaveModal = (props: {setSaveMenuOpened: (boolean: boolean) => void, codeTi
         <div 
             ref={closeMenuRef!}
             class="absolute top-0 left-0 z-10 w-full h-full " onclick={(e)=>{
-
                 if(e.target === closeMenuRef)
-                    props.setSaveMenuOpened(false)  
+                  props.setSaveMenuOpened(false)  
             }}
         >
-            <div class="flex flex-col w-3/6 h-32 absolute z-10 inset-1/2 bg-white -translate-x-1/2 -translate-y-1/2 rounded-xl overflow-hidden shadow-xl">
+            <div class="flex flex-col w-3/6 h-48 absolute z-10 inset-1/2 bg-white -translate-x-1/2 -translate-y-1/2 rounded-xl overflow-hidden shadow-xl">
                 <div class="flex flex-1 items-center justify-center text-center text-2xl bg-white text-white">
                     <span>save your patch</span>
                 </div>
@@ -94,47 +97,64 @@ const SaveModal = (props: {setSaveMenuOpened: (boolean: boolean) => void, codeTi
  const Synth = (props: {
     instrument: SynthType
   }) => {
+    let container: HTMLDivElement
     let textarea: HTMLTextAreaElement
 
     const [listOpened, setListOpened] = createSignal(false)
     const [codeTitle, setCodeTitle] = createSignal("default")
     const [saveMenuOpened, setSaveMenuOpened] = createSignal(false);
 
-    const setCode = async (code: string) => {
+    const [faustElement, setFaustElement] = createSignal();
+
+
+    const setCode = async () => {
+      const code = (container.querySelector(".cm-content") as HTMLElement).innerText
+      // const code = textarea.value
+
       actions.setInstrument(store.selection.instrumentIndex, produce((instrument) => (instrument as SynthType).code = code))
+      setNode();
     }
 
     const setNode = async () => {
+      console.log("this happens?")
       const code = props.instrument.code
       if(!store.context || !code) return;
 
+
       const dsp = await actions.compileFaust(code);
       if(!dsp) return;
-      // const factory = actions.createFactory(dsp, ""))
-      const node = await actions.createFaustNode(dsp)
-      if(!node) {
+      const factory = actions.createFactory(dsp)
+
+      // const node = await actions.createFaustNode(dsp)
+
+      const element = await actions.createFaustElementFromFaustFactory({
+        factory,
+        id: zeptoid(),
+        active: true,
+        parameters: actions.getParametersFromDsp(dsp)
+      });
+
+      if(!element) return;
+
+      if(!element.node) {
         actions.setSelectedInstrument("error", "can not compile")
         return
       }
 
-      if(store.context)
-          node.connect(store.context.destination)
-      if(props.instrument.node)
-          props.instrument.node.disconnect();
+      if(props.instrument.element?.node)
+          props.instrument.element?.node.disconnect();
 
-      actions.setSelectedInstrument("node", node)
+      actions.setSelectedInstrument("element", element)
       actions.setSelectedInstrument("error", undefined)
-
+      setFaustElement(element)
     }
-
-    createEffect(setNode)
 
     return (
     <>
         <Show when={saveMenuOpened()}>
             <SaveModal setSaveMenuOpened={setSaveMenuOpened} codeTitle={codeTitle()} code={props.instrument.code}/>
         </Show>
-        <div class="flex flex-1 flex-col gap-4">
+        <div class="flex flex-1 flex-col gap-2">
             <Switch>
                 <Match when={listOpened()}>
                     <SynthList 
@@ -151,28 +171,49 @@ const SaveModal = (props: {setSaveMenuOpened: (boolean: boolean) => void, codeTi
                     
                 </Match>
                 <Match when={!listOpened()}>
-                    <div class="flex flex-col gap-4 h-96 rounded-2xl overflow-hidden">
-                        <textarea
-                            value={props.instrument.code}
-                            ref={textarea!}
-                            class={`flex-1 font-mono bg-white overflow-auto text-black p-5  ${props.instrument.error ? "border-red-500" : ""}`}
-                            spellcheck={false}
-                        />
+                    <div 
+                      class="flex flex-col h-48 rounded-xl overflow-auto"
+                      ref={container!}
+                    >
+                      <CodeMirror 
+                        code={props.instrument.code}
+                        class={"h-full"}
+                      />
                     </div>
                 </Match>
             </Switch>
-                
-            <div class="flex gap-4">
-                <Button onclick={() => !textarea || setCode(textarea.value)}>
-                    compile
-                </Button>
-                <Button onclick={() => setListOpened(bool => !bool)}>
-                    {!listOpened() ? "open" : "close"}
+            <div class="flex gap-2 h-8">
+                <Button onclick={setCode}>
+                  compile
                 </Button>
                 <Button onclick={()=>setSaveMenuOpened(true)}>
-                    save
+                  save as
+                </Button>
+                <Button onclick={() => setListOpened(bool => !bool)}>
+                  {!listOpened() ? "open" : "close"} list
+                </Button>
+                <Button 
+                  onclick={() => actions.addToEditors({
+                      id: zeptoid(),
+                      code: props.instrument.code, 
+                      oncompile: (dsp) => {
+                        console.log(dsp)
+                      }
+                    })
+                  }
+                  >
+                  window
                 </Button>
             </div>
+            
+            <Show when={props.instrument.element}>
+              <Block 
+                class={`relative flex gap-2 h-24 p-2 bg-white whitespace-nowrap overflow-x-auto overflow-y-hidden ${props.class}`}
+              >
+                <Fx state={props.instrument.element}/>
+              </Block>              
+            </Show>
+            {/* <FxChain fxChain={[]} createNodeAndAddToFxChain={() => {}} compilingIds={[]}/> */}
         </div>
     </>)
   }

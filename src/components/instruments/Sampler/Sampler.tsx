@@ -47,7 +47,7 @@ export default () => {
 
   return (
       <>
-        <div class="h-32 flex">
+        <div class="h-48 flex">
           <Block 
             class="relative flex-1 flex overflow-hidden" 
           >

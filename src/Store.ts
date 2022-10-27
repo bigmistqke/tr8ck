@@ -4,15 +4,15 @@ import { TCompiledDsp } from "faust2webaudio/src/types";
 import {
   getHex
 } from "pastel-color";
-import { batch, createEffect, untrack } from "solid-js";
+import { batch, createEffect, createRoot, untrack } from "solid-js";
 import { createStore, produce, StoreSetter } from "solid-js/store";
 import zeptoid from "zeptoid";
 
 import { DEFAULT_FX, FXS, INSTRUMENT_AMOUNT, ROOT_FREQUENCY, SEQUENCE_LENGTH, TRACK_AMOUNT } from "./constants";
 import { defaultPattern, defaultSampler, defaultSequences } from "./defaults";
-import collectParameters from "./faust/collectParameters";
+import getParametersFromDsp from "./faust/collectParameters";
 
-import { DSPElement, FaustElement, FaustFactory, FxParameter, Instrument, Note, Pattern, Sampler, Track, Waveform, WebAudioElement } from "./types";
+import { DSPElement, FaustElement, FaustFactory, FaustParameter, Instrument, Note, Pattern, Sampler, Synth, Track, Waveform, WebAudioElement } from "./types";
 import ARRAY from "./utils/ARRAY";
 import bpmToMs from "./utils/bpmToMs";
 import copyArrayBuffer from "./utils/copyArrayBuffer";
@@ -102,13 +102,13 @@ const [store, setStore] = createStore<{
         index: i,
         type: "synth",
         code: "",
-        node: undefined,
+        element: undefined,
         color: "",
         pan: 0,
         fxChains: [[]],
         speed: 1,
         compilingIds: [],
-        nothings: []
+        nothings: [],
       })
   ),
   editors: [],
@@ -240,7 +240,6 @@ const initFx = async () => {
 }
 
 const initTracks = async () => {
-  batch(()=> {
     store.rootNode!.connect(store.context!.destination);
     const pitchshifterFactory = store.faustFactories.find(fx => fx.initialName === "pitchShifter");
 
@@ -255,19 +254,22 @@ const initTracks = async () => {
       }, 0, false)
       if(!pitchshifter || !store.context) return;
       const [input, output] = createPorts();
-      setStore("tracks", index, "fxChain", (chain) => [output, ...chain, input]);
-      setStore("tracks", index, "pitchshifter", pitchshifter.node);
-      updateFxChain(track.fxChain, store.rootNode)
-      createEffect(()=>{
-        if(store.solos.length > 0 && !store.solos.includes(index)){
-          (track.fxChain[0].node as GainNode).gain.value = 0
-        }else{
-          (track.fxChain[0].node as GainNode).gain.value = 1
-        }
+      
 
+      createRoot(() => {
+        setStore("tracks", index, "fxChain", (chain) => [output, ...chain, input]);
+        setStore("tracks", index, "pitchshifter", pitchshifter.node);
+        updateFxChain(track.fxChain, store.rootNode);
+        createEffect(()=>{
+          if(store.solos.length > 0 && !store.solos.includes(index)){
+            (track.fxChain[0].node as GainNode).gain.value = 0
+          }else{
+            (track.fxChain[0].node as GainNode).gain.value = 1
+          }
+        })
       })
+      
     })
-  })
 }
 
 const initInstruments = async () => {
@@ -276,7 +278,7 @@ const initInstruments = async () => {
   for(let i = 0; i < INSTRUMENT_AMOUNT; i++){
  
 
-    setStore("instruments", i, defaultSampler())
+    setStore("instruments", i, defaultSampler(i))
 
 /*     batch(() => {
       store.tracks.forEach(async (_, index) => {
@@ -331,7 +333,9 @@ const createFactory = (dsp: TCompiledDsp) => {
 
   const [factory, setFactory] = createStore<FaustFactory>(f)
 
-  createEffect(()=>setFactory("parameters", collectParameters(factory.node)))  
+  createRoot(() => {
+    createEffect(()=>setFactory("parameters", getParametersFromDsp(factory.node)))  
+  })
 
   return factory
 }
@@ -391,7 +395,7 @@ const addFx = async () => {
           id,
           node: dsp,
           initialName: dsp.dspMeta.name || "new",
-          parameters: collectParameters(dsp)
+          parameters: getParametersFromDsp(dsp)
         })
       }
     }
@@ -422,11 +426,17 @@ const setSelectedInstrumentIndex = (index: number) => setStore("selection", "ins
 
 const getSelectedInstrument = () => store.instruments[store.selection.instrumentIndex]
 
+
+const setTypeSelectedInstrument = (type: "sampler" | "synth") => {
+  const instrument = getSelectedInstrument()
+  if(!instrument.active) return;
+  setStore("instruments", store.selection.instrumentIndex, "type", type)
+}
+
 const toggleTypeSelectedInstrument = () => {
   const instrument = getSelectedInstrument()
   if(!instrument.active) return;
-  const instrumentType = instrument.type === "synth" ? "sampler" : "synth"
-  setStore("instruments", store.selection.instrumentIndex, "type", instrumentType)
+  setStore("instruments", store.selection.instrumentIndex, "type", type => type === "synth" ? "sampler" : "synth")
 }
 
 const setSelectedInstrument = function(...args: any[]){
@@ -434,34 +444,29 @@ const setSelectedInstrument = function(...args: any[]){
 }
 
 const cloneSelectedInstrument = async () => {
-
   const {audioBuffer, waveform, fxChains, selection, index } = getSelectedInstrument() as Sampler;
   const sampler = defaultSampler();
 
   const newChains = await cloneFxChains(fxChains);
 
 
-  const unusedInstrument = store.instruments.filter(v => v.index !== index).find(instrument => {
-    // TODO : i don t think this works at all
-    // should fix when i start working with synths again
-
-    console.log("is used? ", instrument)
-
-    if("node" in instrument && instrument.node === undefined){
-      return true;
-    }
-  })
+  const unusedInstrument = store.instruments
+    .filter((v) => v.index !== index)
+    .find((instrument, index) => {
+      console.log(instrument.type, instrument);
+      return (
+        (instrument.type === "sampler" && !instrument.audioBuffer)
+        || (instrument.type === "synth" && !instrument.element)
+    )})
 
   if(unusedInstrument){
     sampler.index = unusedInstrument.index;
-    setStore("instruments", sampler.index, sampler);
-    setSelectedInstrumentIndex(sampler.index);
+    setStore("instruments", unusedInstrument.index, sampler);
+    setSelectedInstrumentIndex(unusedInstrument.index);
   }else{
     setStore("instruments", instruments => [...instruments, sampler]);
     setSelectedInstrumentIndex(store.instruments.length - 1);
   }
-
-  console.log(unusedInstrument);
 
   setSelectedInstrument("selection", newChains);
   setSelectedInstrument("color", getHex());
@@ -534,8 +539,11 @@ const revertSamplerAudiobuffer = async () => {
   if(!store.context || !audioBuffer || !waveform) return;
 
   const clonedBuffer = cloneAudioBuffer(audioBuffer, store.context);
-  Array.prototype.reverse.call( clonedBuffer.getChannelData(0) );
-  Array.prototype.reverse.call( clonedBuffer.getChannelData(1) ); 
+
+  for(let i = 0; i < clonedBuffer.numberOfChannels; i++){
+    Array.prototype.reverse.call( clonedBuffer.getChannelData(i))
+  }
+  
   setSelectedInstrument("audioBuffer", clonedBuffer)
   
   const clonedBuffer2 = cloneAudioBuffer(clonedBuffer, store.context);
@@ -606,7 +614,7 @@ const createFaustElementFromFaustFactory = async (
     id: string, 
     detachable?: boolean
     active: boolean
-    parameters?: FxParameter[]
+    parameters?: FaustParameter[]
   }
 
 ) : Promise<FaustElement | undefined> => {
@@ -628,54 +636,57 @@ const createFaustElementFromFaustFactory = async (
   const [element, setElement] = createStore<FaustElement>(initialElement)
 
   let init = false;
-  createEffect(async () =>{ 
-    // needed to trigger reactivity;
-    const dsp = factory.node
-
-    if(!init) {
-      init = true;
-      return;
-    }
-    if(!store.context) return;
-    const node = await createFaustNode(dsp)
-    if(!node) return;
-    setElement("node", node)
-    if(element.connection)
-      node.connect(element.connection /* || store.context?.destination */)
-  })
-
-  const equal = (array1: string[], array2: string[]) => {
-    if(array1.length !== array2.length) return false;
-    let result = true;
-    array1.some((value) => {
-      if(array2.indexOf(value) === -1){
-        result = false;
-        return true;
+  createRoot(() => {
+    createEffect(async () =>{ 
+      // needed to trigger reactivity;
+      const dsp = factory.node
+  
+      if(!init) {
+        init = true;
+        return;
       }
+      if(!store.context) return;
+      const node = await createFaustNode(dsp)
+      if(!node) return;
+      setElement("node", node)
+      if(element.connection)
+        node.connect(element.connection /* || store.context?.destination */)
     })
-    return result;
-  }
-
-  const equalParameters = (parameters1: FxParameter[], parameters2: FxParameter[]) => {
-    const labels1 = parameters1.map(v => v.label);
-    const labels2 = parameters2.map(v => v.label);
-    return equal(labels1, labels2)
-  }
-
-  createEffect(() =>{ 
-    const dsp = factory.node
-    const newParameters = collectParameters(factory.node); 
-    const existingParameters = untrack(()=> element.parameters);
-
-    if(!equalParameters(newParameters, existingParameters)){
-      const mergedParameters = newParameters.map(parameter => {
-        const existingParameter = existingParameters.find(p => p.label === parameter.label)
-        return existingParameter || parameter;
+  
+    const equal = (array1: string[], array2: string[]) => {
+      if(array1.length !== array2.length) return false;
+      let result = true;
+      array1.some((value) => {
+        if(array2.indexOf(value) === -1){
+          result = false;
+          return true;
+        }
       })
-      setElement("parameters", mergedParameters)
+      return result;
     }
-
+  
+    const equalParameters = (parameters1: FaustParameter[], parameters2: FaustParameter[]) => {
+      const labels1 = parameters1.map(v => v.label);
+      const labels2 = parameters2.map(v => v.label);
+      return equal(labels1, labels2)
+    }
+  
+    createEffect(() =>{ 
+      const dsp = factory.node
+      const newParameters = getParametersFromDsp(factory.node); 
+      const existingParameters = untrack(()=> element.parameters);
+  
+      if(!equalParameters(newParameters, existingParameters)){
+        const mergedParameters = newParameters.map(parameter => {
+          const existingParameter = existingParameters.find(p => p.label === parameter.label)
+          return existingParameter || parameter;
+        })
+        setElement("parameters", mergedParameters)
+      }
+  
+    })
   })
+  
   // const faustNode = createMemo(() => createFaustNode(factory.dsp));
   return element
 }
@@ -830,39 +841,38 @@ const createNodeAndAddToFxChainTrack = async (
 /*   if(parameters)
     fxNode.parameters = parameters; */
   
-  trackIndex = trackIndex !== undefined ? trackIndex : store.selection.trackIndex;
-  setStore("tracks", trackIndex, "fxChain", (fxChain) => ARRAY.insert(fxChain, index, element))
-  if(update){ 
-
   
-    updateFxChain(store.tracks[trackIndex].fxChain, store.rootNode)
-  }
-  let init1 = false
-  createEffect(()=>{
-    element.parameters.forEach(({address, value, label}) => {
-      if(element.node === track.pitchshifter && label === "shift"){
-        element.node.setParamValue(address, value + track.semitones)
-      }else{
-        element.node.setParamValue(address, value)
-      }
+
+  createRoot(()=>{
+    trackIndex = trackIndex !== undefined ? trackIndex : store.selection.trackIndex;
+    setStore("tracks", trackIndex, "fxChain", (fxChain) => ARRAY.insert(fxChain, index, element))
+    if(update){ 
+      updateFxChain(store.tracks[trackIndex].fxChain, store.rootNode)
+    }
+
+    let init1 = false
+    createEffect(()=>{
+      element.parameters.forEach(({address, value, label}) => {
+        if(element.node === track.pitchshifter && label === "shift"){
+          element.node.setParamValue(address, value + track.semitones)
+        }else{
+          element.node.setParamValue(address, value)
+        }
+      })
     })
+  
+    let isInitialized = Initialized();
+    createEffect(() => {
+      if(!isInitialized(element.active)) return;
+      updateFxChain(track.fxChain, store.rootNode)
+    })
+  
+    setSelectedTrack("compilingIds", (compilingIds: string[]) => 
+      compilingIds.filter(compilingId => compilingId  !== id)
+    );
+
   })
-
-  let isInitialized = Initialized();
-  createEffect(() => {
-    if(!isInitialized(element.active)) return;
-    updateFxChain(track.fxChain, store.rootNode)
-  })
-
-
-/*   if(store.context && store.tracks[trackIndex].fxChain.length > 0){
-
-
-    store.tracks[trackIndex].fxChain[0].node.connect(store.context?.destination); 
-  } */
-  setSelectedTrack("compilingIds", (compilingIds: string[]) => 
-    compilingIds.filter(compilingId => compilingId  !== id)
-  );
+  
   return element;
 }
 
@@ -963,54 +973,7 @@ const getTrackSemitones = (frequency: number, speed: number) => {
 
 const getTrackShift = (index: number) => {
   const fxData = store.tracks[index].fxChain.find(fx => fx.node === store.tracks[index].pitchshifter);
-  return fxData!.parameters.find((parameter: FxParameter) => parameter.label === "shift");
-}
-
-function playSampler(instrument: Sampler, trackIndex: number, frequency: number) {
-  const {audioBuffer, selection, speed} = instrument;
-
-  if(!store.context || !audioBuffer) return;
-  if(store.tracks[trackIndex].source){
-    store.tracks[trackIndex].source!.stop();
-  }
-  const source = store.context.createBufferSource();
-  source.buffer = audioBuffer;
-  source.playbackRate.value = speed;
-
-
-  const fxChainTrack = store.tracks[trackIndex].fxChain;
-  const fxEntryTrack = fxChainTrack[fxChainTrack.length - 1];
-
-  const fxChainInstrument = instrument.fxChains[trackIndex];
-  const fxEntryInstrument = fxChainInstrument[fxChainInstrument.length - 1];
-  const fxExitInstrument = fxChainInstrument[0];
-
-
-  console.log("SOURCE YES", selection.start, selection.end);
-
-  // source.connect(store.context.destination)
-  if(fxEntryInstrument){
-    source.connect(fxEntryInstrument.node)
-    fxExitInstrument.node.connect(fxEntryTrack?.node/*  || store.context.destination */)
-  }else{
-    source.connect(fxEntryTrack?.node /* || store.context.destination */)
-  }
-  
-  setStore("tracks", trackIndex, "source", source);
-  setStore("tracks", trackIndex, "instrumentIndex", instrument.index)
-
-  const duration = ((selection.end - selection.start) * 128  ) / audioBuffer.length * (audioBuffer.duration ) ;
-  const start = (selection.start * 128) / audioBuffer.length * audioBuffer.duration;
-  source.start(0, start, duration);
-
-  const semitones = getTrackSemitones(frequency, Math.abs(speed))
-  const shift = getTrackShift(trackIndex);
-  const totalPitch = semitones + shift!.value;
-
-  setStore("tracks", trackIndex, "semitones", semitones);
-  setStore("tracks", trackIndex, "frequency", frequency);
-
-  store.tracks[trackIndex].pitchshifter?.setParamValue("/Pitch_Shifter/shift", totalPitch)
+  return fxData!.parameters.find((parameter: FaustParameter) => parameter.label === "shift");
 }
 
 const toggleTrackSolo = (index: number) => {
@@ -1035,23 +998,103 @@ const getBlockIndex = (blockId: string) => store.composition.findIndex(block => 
 
 // AUDIO-ENGINE
 
-const playNote = (instrumentIndex: number, frequency: number, track: number) => {
+
+
+
+
+const updateAudioPipe = (instrument: Instrument, node: AudioNode | FaustAudioWorkletNode, trackIndex: number) => {
+  const fxChainTrack = store.tracks[trackIndex].fxChain;
+  const fxEntryTrack = fxChainTrack[fxChainTrack.length - 1];
+
+  const fxChainInstrument = instrument.fxChains[trackIndex];
+  const fxEntryInstrument = fxChainInstrument[fxChainInstrument.length - 1];
+  const fxExitInstrument = fxChainInstrument[0];
+
+  if(fxEntryInstrument){
+    node.connect(fxEntryInstrument.node)
+    fxExitInstrument.node.connect(fxEntryTrack?.node/*  || store.context.destination */)
+  }else{
+    node.connect(fxEntryTrack?.node /* || store.context.destination */)
+  }
+}
+
+const playSampler = (instrument: Sampler, frequency: number,trackIndex: number) => {
+  const {audioBuffer, selection, speed} = instrument;
+
+  if(!store.context || !audioBuffer) return;
+  if(store.tracks[trackIndex].source){
+    store.tracks[trackIndex].source!.stop();
+  }
+  const source = store.context.createBufferSource();
+  source.buffer = audioBuffer;
+  source.playbackRate.value = speed;
+
+  updateAudioPipe(instrument, source, trackIndex);
+
+  setStore("tracks", trackIndex, "source", source);
+  setStore("tracks", trackIndex, "instrumentIndex", instrument.index)
+
+  const duration = ((selection.end - selection.start) * 128  ) / audioBuffer.length * (audioBuffer.duration ) ;
+  const start = (selection.start * 128) / audioBuffer.length * audioBuffer.duration;
+  source.start(0, start, duration);
+
+  const semitones = getTrackSemitones(frequency, Math.abs(speed))
+  const shift = getTrackShift(trackIndex);
+  const totalPitch = semitones + shift!.value;
+
+  setStore("tracks", trackIndex, "semitones", semitones);
+  setStore("tracks", trackIndex, "frequency", frequency);
+
+  store.tracks[trackIndex].pitchshifter?.setParamValue("/Pitch_Shifter/shift", totalPitch)
+
+  return source
+}
+
+
+const playSynth = (instrument: Synth, frequency: number, trackIndex: number) => {
+  if(!instrument.element.node) return;
+
+  if(store.tracks[trackIndex].source){
+    store.tracks[trackIndex].source!.stop();
+  }
+
+  updateAudioPipe(instrument, instrument.element.node, trackIndex)
+
+  const freq = instrument.element.parameters?.find(parameter => parameter.address.includes("freq"))
+  const gate = instrument.element.parameters?.find(parameter => parameter.address.includes("gate"))
+
+  console.log(freq,gate,instrument.element.parameters)
+  if(freq){
+    instrument.element.node.setParamValue(freq.address, frequency)
+  }
+
+  if(gate){
+    instrument.element.node.setParamValue(gate.address, 0.99)
+  }
+
+  // this is a hack, i have no idea why this code needs to be here but otherwise it will not play the sounds
+  // needs further investigation at some point i guess
+  const source = store.context!.createBufferSource();
+  source.start();
+  // end hack
+  store.tracks[trackIndex].pitchshifter?.setParamValue("/Pitch_Shifter/shift", getTrackShift(trackIndex).value)
+  setStore("tracks", trackIndex, "instrumentIndex", instrument.index)
+}
+
+const playNote = (instrumentIndex: number, frequency: number, trackIndex: number) => {
   const instrument = store.instruments[instrumentIndex];
   if(!instrument.active) return;
 
+
   switch(instrument.type){
     case "synth":
-      if(instrument.node){
-        instrument.node.setParamValue(
-          "/FaustDSP/freq",
-          frequency
-        )
-        instrument.node.setParamValue("/FaustDSP/drop", 0.9 + ((store.clock / 10000) % 0.1))
+      if(instrument.element){
+        playSynth(instrument, frequency, trackIndex)
       }
       break;
     case "sampler":
       if(instrument.audioBuffer){
-        playSampler(instrument, track, frequency)
+        playSampler(instrument, frequency, trackIndex)
       }
       break;
   }
@@ -1141,8 +1184,23 @@ const recordAudio = async (type: "file" | "resample" | "mic") => {
     }else{
       const arrayBuffer = await blob.arrayBuffer();
       const sampler = defaultSampler(store.instruments.length);
-      setStore("instruments", instruments => [...instruments, sampler] )
-      setSelectedInstrumentIndex(store.instruments.length - 1);
+
+      const unusedInstrument = store.instruments
+        .find((instrument) => (instrument.type === "sampler" && !instrument.audioBuffer)
+        || (instrument.type === "synth" && !instrument.element))
+
+      if(unusedInstrument){
+        const index = unusedInstrument.index;
+        sampler.color = unusedInstrument.color;
+        setStore("instruments", index, sampler)
+        setSelectedInstrumentIndex(index);
+      }else{
+        setStore("instruments", instruments => [...instruments, sampler] )
+        setSelectedInstrumentIndex(store.instruments.length - 1);
+      }
+
+
+      
       const index = store.arrayBuffers.filter(({name}) => name.startsWith("recording")).length;
       const name = `recording_${index}`;
       actions.addToArrayBuffers({arrayBuffer, name});
@@ -1194,12 +1252,13 @@ const setClock = (index: number) => {
 const actions = {
   initContext, initFaust, initKeyboard, initTracks, initFx, initClock, /* initCodeMirror, */
   setBPM, setPlayMode, setSelectedFrequency,
-  compileFaust, createFactory, updateFaustFactory,
+  compileFaust, createFactory, updateFaustFactory, createFaustElementFromFaustFactory,
   addFx,
-  getSelectedInstrument, setSelectedInstrumentIndex, cloneSelectedInstrument,
+  getSelectedInstrument, setSelectedInstrument, setSelectedInstrumentIndex, cloneSelectedInstrument,
   setInstrument, getColorInstrument, initInstruments,
   createNodeAndAddToFxChainInstrument, removeNodeFromFxChainInstrument, updateOrderFxChainInstrument,
   toggleTypeSelectedInstrument, 
+  setTypeSelectedInstrument,
   setSamplerNavigation, setSamplerSelection, 
   setSamplerWaveform, setSamplerAudioBuffer,
   processSamplerArrayBuffer: processSelectedSamplerArrayBuffer,
@@ -1222,6 +1281,7 @@ const actions = {
   recordAudio,
   togglePlaying, resetPlaying,
   setClock,
+  getParametersFromDsp
 }
 
 

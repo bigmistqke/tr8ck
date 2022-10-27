@@ -8,7 +8,7 @@ export async function getWebAudioMediaStream() {
   try {
     const result = await window.navigator.mediaDevices.getUserMedia({
       audio: {
-        sampleSize: 16,
+        sampleSize: 64,
         channelCount: 1,
       },
       video: false,

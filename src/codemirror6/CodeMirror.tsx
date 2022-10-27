@@ -8,7 +8,7 @@ import faust from "./faust";
 let language = new Compartment;
 const tabSize = new Compartment;
 
-export default (props: JSX.HTMLAttributes<HTMLDivElement> & {code: string, setState: (state: EditorState) => void}) => {
+export default (props: JSX.HTMLAttributes<HTMLDivElement> & {code: string, setState?: (state: EditorState) => void}) => {
   let editorRef : HTMLDivElement;
 
   onMount(()=>{
@@ -20,12 +20,12 @@ export default (props: JSX.HTMLAttributes<HTMLDivElement> & {code: string, setSt
       ],
       doc: props.code
     })
-    props.setState(state);
+    if(props.setState)
+      props.setState(state);
     new EditorView({
       state,
       parent: editorRef
     })
-
   })
 
   return <div 

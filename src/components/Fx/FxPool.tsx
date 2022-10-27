@@ -19,7 +19,7 @@ export default () => {
                 
                 return (
                 <div 
-                  class={`relative h-20 cursor-move ${s.fx}`} 
+                  class={`relative h-18 cursor-move ${s.fx}`} 
                 >
                   <button 
                     class={`absolute right-1 top-1 z-10 p-1 text-xs bg-white rounded-lg drop-shadow-sm hover:bg-black hover:text-white`}

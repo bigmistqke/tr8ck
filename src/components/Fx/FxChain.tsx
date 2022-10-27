@@ -107,7 +107,7 @@ export default (props: {
       ref={container!}
     >
       <Show 
-        when={props.fxChain.length > 0}
+        when={props.fxChain.length > 2}
         fallback={<CenteredLabel label="drag'n'drop from FX"/>}
       >
         <For each={props.fxChain}>

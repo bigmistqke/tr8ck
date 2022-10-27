@@ -18,7 +18,9 @@ function Button(
   )
 }
 
-const ButtonBar = (props: JSX.HTMLAttributes<HTMLButtonElement>) => {
+const ButtonBar = (
+  props: JSX.HTMLAttributes<HTMLButtonElement> & { selected?: boolean }
+) => {
   return (
     <Button
       {...props}
@@ -33,7 +35,7 @@ const Block = (props: JSX.HTMLAttributes<HTMLDivElement>) => {
   return (
     <div
       {...props}
-      class={`${props.class || ""} rounded-xl uppercase transition-colors`}
+      class={`${props.class || ""} rounded-xl transition-colors`}
     >
       {props.children}
     </div>
@@ -64,7 +66,7 @@ const SliderBar = (
     <Block
       {...props}
       onmousedown={mousedown}
-      class={`${props.class} flex flex-1 h-8 content-center items-center justify-center text-center text-xs tracking-widest bg-white select-none cursor-e-resize`}
+      class={`${props.class} flex flex-1 h-8 content-center items-center justify-center text-center text-xs tracking-widest uppercase bg-white select-none cursor-e-resize`}
     >
       {props.children}
     </Block>
