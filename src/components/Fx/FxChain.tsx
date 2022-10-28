@@ -112,7 +112,14 @@ export default (props: {
       >
         <For each={props.fxChain}>
           {
-            (fx, index) => <Fx state={fx} index={index()} updateOrder={updateOrder} resetDragCount={() => dragCount = 0}/>
+            (fx, index) => 
+              <Fx 
+                state={fx} 
+                index={index()} 
+                updateOrder={updateOrder}
+                resetDragCount={() => dragCount = 0}
+                draggable={true}
+              />
           }
         </For>
       </Show>

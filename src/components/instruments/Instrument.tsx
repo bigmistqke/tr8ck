@@ -1,6 +1,6 @@
 import { createEffect, Match, Switch } from "solid-js"
 import SamplerUI from "./Sampler/Sampler"
-import SynthUI from "./Synth"
+import SynthUI from "./Synth/Synth"
 import { Sampler, Synth } from "../../types"
 import { actions, store } from "../../Store"
 import InstrumentSelection from "./InstrumentSelection"
@@ -14,13 +14,15 @@ const Instrument = () => {
         const i = instrument();
         return i.active ? i.type : undefined
     }
+
+
     
     return (
-      <Block class="flex flex-1 bg-neutral-100 p-2 w-full">
+      <Block class="flex flex-0 bg-neutral-100 p-2 w-full">
         <div class="flex flex-1 flex-col gap-2 w-full">
             <div class="flex flex-1 flex-col gap-2">
                 <div class="flex  text-black gap-2">
-                    <Bar class="bg-selected select-none">#{store.selection.instrumentIndex}</Bar>
+                    <Bar class="bg-selected-instrument select-none">#{store.selection.instrumentIndex}</Bar>
                     <ButtonBar 
                       class="flex-1 text-center bg-white select-none"
                       selected={actions.getSelectedInstrument().type === "sampler"}

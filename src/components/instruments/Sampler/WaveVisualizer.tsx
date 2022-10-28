@@ -126,7 +126,7 @@ const WaveVisualizer = (props: {
   }
 
 
-  return (<div class="flex-1 h-full flex bg-selected transition-colors" onmousedown={mousedown}>
+  return (<div class="flex-1 h-full flex bg-selected-instrument transition-colors" onmousedown={mousedown}>
     <div class="w-full h-full absolute z-20 pointer-events-none pt-4 pb-4">
       <canvas 
         id={id} 
@@ -136,7 +136,7 @@ const WaveVisualizer = (props: {
     </div>
     <Show 
       when={props.instrument.waveform}
-      fallback={<CenteredLabel label="load a sample"/>}
+      fallback={<CenteredLabel label={`to load a sample\nyou can drag'n'drop a file\nor click on 'load'-button`}/>}
     >
       <WaveGrid
         canvasWidth={canvasWidth()}

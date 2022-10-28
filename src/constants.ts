@@ -1,6 +1,6 @@
 import mtof from "./utils/mtof";
 
-const ROOT_FREQUENCY = mtof(72);
+const ROOT_FREQUENCY = mtof(60);
 const INSTRUMENT_AMOUNT = 7;
 const TRACK_AMOUNT = 8;
 const SEQUENCE_LENGTH = 16;
@@ -135,6 +135,64 @@ process = par(i, 2, voice)
 		dtime	= hslider("delay[unit:ms][style:knob]", 0, 0, 5000, 0.1)*ma.SR/1000.0;
 		fback 	= hslider("feedback[style:knob]",0,0,100,0.1)/100.0; 
 	};`
+  ,
+  `declare name "korg35LPF";
+declare description "Demonstration of the Korg 35 LPF";
+declare author "Eric Tarr";
+
+import("stdfaust.lib");
+
+Q = hslider("Q",1,0.5,10,0.01);
+normFreq = hslider("freq",0.5,0,1,0.001):si.smoo;
+
+process = ve.korg35LPF(normFreq,Q) <:_,_;`
+  ,
+  `declare name "HPF";
+
+  import("maxmsp.lib");
+  
+  G = hslider("Gain [unit:dB]", 0, -10, 10, 0.1);
+  F = hslider("Freq", 1000, 100, 10000, 1);
+  Q = hslider("Q", 1, 0.01, 100, 0.01);
+  
+  process(x,y) = HPF(x,F,G,Q), HPF(y,F,G,Q);
+`, 
+
+
+]
+
+const EXTRA_FXS = [
+`declare name "cryBaby";
+declare description "Application demonstrating the CryBaby wah pedal emulation";
+import("stdfaust.lib");
+process = dm.crybaby_demo;`,
+`declare name "zitaRev";
+declare version "0.0";
+declare author "JOS, Revised by RM";
+declare description "Example GUI for zita_rev1_stereo (mostly following the Linux zita-rev1 GUI).";
+
+import("stdfaust.lib");
+
+process = dm.zita_rev1;`,
+
+`declare name "phaser";
+declare version "0.0";
+declare author "JOS, revised by RM";
+declare description "Phaser demo application.";
+
+import("stdfaust.lib");
+
+process = dm.phaser2_demo;
+`,
+
+`declare name "flanger";
+declare version "0.0";
+declare author "JOS, revised by RM";
+declare description "Flanger effect application.";
+
+import("stdfaust.lib");
+
+process = dm.flanger_demo;`,
 ]
 
 
@@ -147,5 +205,6 @@ export {
   DEFAULT_FX,
   PITCHSHIFTER,
   REVERB,
-  FXS
+  FXS,
+  EXTRA_FXS
 }

@@ -8,7 +8,7 @@ function Button(
   return (
     <button
       {...props}
-      class={`flex-1 rounded-xl text-xs tracking-widest uppercase hover:bg-black hover:text-white transition-colors ${
+      class={`flex-1 rounded-xl text-xs tracking-widest uppercase hover:bg-black hover:text-white select-none transition-colors ${
         props.class || ""
       } ${props.selected ? "bg-black text-white" : "bg-white"}`}
       style={props.style}
@@ -24,7 +24,7 @@ const ButtonBar = (
   return (
     <Button
       {...props}
-      class={`h-8 text-xs tracking-widest text-center ${props.class || ""}`}
+      class={`h-6 text-xs tracking-widest text-center select-none ${props.class || ""}`}
     >
       {props.children}
     </Button>
@@ -45,7 +45,7 @@ const Block = (props: JSX.HTMLAttributes<HTMLDivElement>) => {
 const Bar = (props: JSX.HTMLAttributes<HTMLDivElement>) => (
   <Block
     {...props}
-    class={`${props.class} flex flex-1 h-8 max-h-8 items-center justify-center content-center text-center text-xs tracking-widest`}
+    class={`${props.class} flex flex-1 h-6 max-h-6 items-center justify-center content-center text-center text-xs tracking-widest`}
   >
     {props.children}
   </Block>
@@ -66,7 +66,7 @@ const SliderBar = (
     <Block
       {...props}
       onmousedown={mousedown}
-      class={`${props.class} flex flex-1 h-8 content-center items-center justify-center text-center text-xs tracking-widest uppercase bg-white select-none cursor-e-resize`}
+      class={`${props.class} flex flex-1 h-6 content-center items-center justify-center text-center text-xs tracking-widest uppercase bg-white select-none cursor-e-resize`}
     >
       {props.children}
     </Block>
@@ -74,11 +74,18 @@ const SliderBar = (
 }
 
 const ButtonWithHoverOutline = (
-  props: JSX.HTMLAttributes<HTMLButtonElement>
+  props: JSX.HTMLAttributes<HTMLButtonElement> & {
+    buttonClass?: string 
+    selected?: boolean
+  }
 ) => (
-  <button onclick={props.onclick} class={`flex-1 flex h-8`}>
+  <button onclick={props.onclick} class={`flex-1 flex h-6 overflow-hidden ${props.class}`}>
     <div
-      class={`flex flex-1 h-full rounded-xl justify-center items-center text-xs hover:border-4 hover:border-white transition-colors ${props.class}`}
+      class={`flex flex-1 h-full justify-center items-center text-xs rounded-xl uppercase hover:border-4 hover:border-white select-none  transition-colors ${
+        props.buttonClass
+      } ${
+        props.selected ? "border-white border-4" : ""
+      }`}
       style={props.style}
     >
       <span>{props.children}</span>
@@ -86,10 +93,12 @@ const ButtonWithHoverOutline = (
   </button>
 )
 
-const AddButton = (props: JSX.HTMLAttributes<HTMLButtonElement>) => (
+const AddButton = (props: JSX.HTMLAttributes<HTMLButtonElement> & {
+  selected?: boolean
+}) => (
   <ButtonWithHoverOutline
     {...props}
-    class="flex-0 bg-white hover:bg-black hover:text-white"
+    buttonClass={`flex-0 bg-white hover:bg-black hover:text-white `}
   >
   +
   </ButtonWithHoverOutline>
@@ -104,7 +113,7 @@ const Knob = (props: {
 
   return (
     <button
-      class="inline-block m-auto aspect-square rounded-full bg-black cursor-e-resize"
+      class="inline-block m-auto aspect-square rounded-full bg-black cursor-e-resize select-none "
       style={{
         height: "32px",
         width: "32px",
@@ -136,7 +145,7 @@ const LabeledKnob = (
         <Knob rotation={props.rotation} onupdate={props.onupdate} />
       </div>
       <span
-        class="flex-0 flex items-center self-center normal-case select-none text-neutral-500 whitespace-nowrap"
+        class="flex-0 flex items-center self-center normal-case select-none text-neutral-500 whitespace-nowrap select-none "
         style={{ "font-size": "7pt" }}
       >
         {props.label}
@@ -146,7 +155,7 @@ const LabeledKnob = (
 }
 
 const CenteredLabel = (props: { label: JSXElement | JSXElement[] }) => (
-  <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 normal-case text-xs text-neutral-500">
+  <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 normal-case text-xs text-center text-neutral-500 whitespace-pre select-none ">
     {props.label}
   </span>
 )

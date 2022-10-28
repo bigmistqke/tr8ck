@@ -136,7 +136,7 @@ const Macro = () => {
     return (
       <Block class="flex flex-0 w-48 p-2 bg-neutral-100 max-h-1/2 overflow-hidden">
         <div class="flex flex-col flex-1 gap-2">
-          <div class="flex gap-2 h-8" >
+          <div class="flex gap-2 h-6" >
             <Button 
               selected={store.playMode === "pattern"}
               // class={`${store.playMode === "pattern" ? "bg-black text-white" : "bg-white"}`}

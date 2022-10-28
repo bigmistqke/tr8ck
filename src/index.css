@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 :root{
-  --selected-color: white;
+  --selected-instrument: white;
   --modal-filter: "";
 }
 
@@ -14,6 +14,9 @@
 body {
   padding: 0px;
   margin: 0px;
+  height: 100vh;
+  overflow: hidden;
+  font-family: gas;
 }
 input, textarea{
   outline: none !important;
@@ -21,19 +24,10 @@ input, textarea{
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgb(115 115 115) #fff0;
+  scrollbar-color: rgb(229, 229, 229) rgb(224, 224, 224,0);
 }
 
-/* ::-webkit-scrollbar {
-  height: 12px;
-  width: 6px;
-  background: rgba(0,0,0,0);
+@font-face {
+  font-family: "gas";
+  src: url("./assets/gas.ttf");
 }
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0);
-}
-
-::-webkit-scrollbar-corner {
-  background: rgba(0,0,0,0);
-} */

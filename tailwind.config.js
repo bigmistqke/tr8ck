@@ -3,10 +3,13 @@ export default {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     fontSize: {
-      xs: ['0.6rem', '0.6rem'],
+      xs: ['0.6rem', '0.75rem'],
     },
     extend: {
-      colors: {"selected": "var(--selected-color) !important"},
+      colors: {
+        "selected-instrument": "var(--selected-instrument)",
+        "selected-pattern": "var(--selected-pattern) !important"
+      },
       animation: {
         record: 'record 1s ease-in-out infinite',
       },

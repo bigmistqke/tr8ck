@@ -8,6 +8,7 @@ specifiers:
   '@codemirror/state': ^6.1.2
   '@thisbeyond/solid-dnd': ^0.7.2
   autoprefixer: ^10.4.12
+  buffer: ^6.0.3
   codemirror: ^6.0.1
   deep-clone: ^3.0.3
   fals: ^1.0.5
@@ -22,6 +23,7 @@ specifiers:
   typescript: ^4.8.4
   vite: ^3.1.8
   vite-plugin-solid: ^2.3.9
+  wasm-flate: 1.0.2-browser
   waveform-data: ^4.3.0
   wavesurfer.js: ^6.3.0
   worktank: ^2.3.0
@@ -35,7 +37,8 @@ dependencies:
   '@codemirror/legacy-modes': 6.1.0
   '@codemirror/state': 6.1.2
   '@thisbeyond/solid-dnd': 0.7.2_solid-js@1.5.8
-  codemirror: 6.0.1
+  buffer: 6.0.3
+  codemirror: 6.0.1_@lezer+common@1.0.1
   deep-clone: 3.0.3
   fals: 1.0.5
   midiutils: 0.0.4
@@ -43,6 +46,7 @@ dependencies:
   randomcolor: 0.6.2
   solid-icons: 1.0.2_solid-js@1.5.8
   solid-js: 1.5.8
+  wasm-flate: 1.0.2-browser
   waveform-data: 4.3.0
   wavesurfer.js: 6.3.0
   worktank: 2.3.0
@@ -373,11 +377,13 @@ packages:
       to-fast-properties: 2.0.0
     dev: true
 
-  /@codemirror/autocomplete/6.3.0_ctx2z4wazhwjzmg7rhoixjtupy:
+  /@codemirror/autocomplete/6.3.0_ou2brkuzkzbtuppelqg5jcciia:
     resolution: {integrity: sha512-4jEvh3AjJZTDKazd10J6ZsCIqaYxDMCeua5ouQxY8hlFIml+nr7le0SgBhT3SIytFBmdzPK3AUhXGuW3T79nVg==}
     peerDependencies:
       '@codemirror/language': ^6.0.0
       '@codemirror/state': ^6.0.0
+      '@codemirror/view': ^6.0.0
+      '@lezer/common': ^1.0.0
     dependencies:
       '@codemirror/language': 6.2.1
       '@codemirror/state': 6.1.2
@@ -397,7 +403,7 @@ packages:
   /@codemirror/lang-javascript/6.1.0:
     resolution: {integrity: sha512-wAWEY1Wdis2cKDy9A5q/rUmzLHFbZgoupJBcGaeMMsDPi68Rm90NsmzAEODE5kW8mYdRKFhQ157WJghOZ3yYdg==}
     dependencies:
-      '@codemirror/autocomplete': 6.3.0_ctx2z4wazhwjzmg7rhoixjtupy
+      '@codemirror/autocomplete': 6.3.0_ou2brkuzkzbtuppelqg5jcciia
       '@codemirror/language': 6.2.1
       '@codemirror/lint': 6.0.0
       '@codemirror/state': 6.1.2
@@ -657,6 +663,10 @@ packages:
       babel-plugin-jsx-dom-expressions: 0.34.13_@babel+core@7.19.3
     dev: true
 
+  /base64-js/1.5.1:
+    resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
+    dev: false
+
   /binary-extensions/2.2.0:
     resolution: {integrity: sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==}
     engines: {node: '>=8'}
@@ -679,6 +689,13 @@ packages:
       node-releases: 2.0.6
       update-browserslist-db: 1.0.10_browserslist@4.21.4
     dev: true
+
+  /buffer/6.0.3:
+    resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
+    dependencies:
+      base64-js: 1.5.1
+      ieee754: 1.2.1
+    dev: false
 
   /camelcase-css/2.0.1:
     resolution: {integrity: sha512-QOSvevhslijgYwRx6Rv7zKdMF8lbRmx+uQGx2+vDc+KI/eBnsy9kit5aj23AgGu3pa4t9AgwbnXWqS+iOY+2aA==}
@@ -713,16 +730,18 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /codemirror/6.0.1:
+  /codemirror/6.0.1_@lezer+common@1.0.1:
     resolution: {integrity: sha512-J8j+nZ+CdWmIeFIGXEFbFPtpiYacFMDR8GlHK3IyHQJMCaVRfGx9NT+Hxivv1ckLWPvNdZqndbr/7lVhrf/Svg==}
     dependencies:
-      '@codemirror/autocomplete': 6.3.0_ctx2z4wazhwjzmg7rhoixjtupy
+      '@codemirror/autocomplete': 6.3.0_ou2brkuzkzbtuppelqg5jcciia
       '@codemirror/commands': 6.1.2
       '@codemirror/language': 6.2.1
       '@codemirror/lint': 6.0.0
       '@codemirror/search': 6.2.2
       '@codemirror/state': 6.1.2
       '@codemirror/view': 6.4.0
+    transitivePeerDependencies:
+      - '@lezer/common'
     dev: false
 
   /color-convert/1.9.3:
@@ -1315,6 +1334,10 @@ packages:
     resolution: {integrity: sha512-c3Ab/url5ksaT0WyleslpBEthOzWhrjQbg75y7XUsfSzi3Dgzt0l8w5e7DylRn15MTlMMD58dTfzddNS2kcAjQ==}
     dev: true
 
+  /ieee754/1.2.1:
+    resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
+    dev: false
+
   /is-binary-path/2.1.0:
     resolution: {integrity: sha512-ZMERYes6pDydyuGidse7OsHxtbI7WVeUEozgR/g7rd0xUimYNlvZRE/K2MgZTjWy725IfelLeVcEM97mmtRGXw==}
     engines: {node: '>=8'}
@@ -1756,6 +1779,10 @@ packages:
 
   /w3c-keyname/2.2.6:
     resolution: {integrity: sha512-f+fciywl1SJEniZHD6H+kUO8gOnwIr7f4ijKA6+ZvJFjeGi1r4PDLl53Ayud9O/rk64RqgoQine0feoeOU0kXg==}
+    dev: false
+
+  /wasm-flate/1.0.2-browser:
+    resolution: {integrity: sha512-qpqOzvbKtgG/2Mb0DYXVPQ2nOrkKYoAQtpr4QZzgO8SMfKieeODUy2vomMnimQjH/K2RGWnw+kZmO8yf+Yh9qA==}
     dev: false
 
   /waveform-data/4.3.0:

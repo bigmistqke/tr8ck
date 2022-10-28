@@ -1,7 +1,6 @@
 .fx > button {
   visibility: hidden;
 }
-
 .fx:hover > button {
   visibility: visible;
 }

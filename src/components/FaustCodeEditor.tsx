@@ -5,14 +5,15 @@ import CodeMirror from "../codemirror6/CodeMirror";
 import cursorEventHandler from "../utils/cursorEventHandler";
 import { actions } from "../Store";
 import { Button } from "./UIElements";
+import { FaustCompilationResponse, FaustElement } from "../types";
 
-
-
-export default (props: {
+export interface FaustCodeEditorProps {
   id: string
   code: string
-  oncompile: (dsp: TCompiledDsp) => void
-}) => {
+  compile: (code: string) => Promise<FaustCompilationResponse>
+}
+
+export default (props: FaustCodeEditorProps) => {
   let editorRef : HTMLDivElement;
   let containerRef : HTMLDivElement;
 
@@ -37,9 +38,8 @@ export default (props: {
     // TODO: find out the proper way to do this...
     const code = (containerRef.querySelector(".cm-content") as HTMLElement).innerText;
     if(!code) return;
-    const dsp = await actions.compileFaust(code)
-    if(!dsp) return;
-    props.oncompile(dsp);
+    const dsp = await props.compile(code);
+    
   }
 
   const close = (e: MouseEvent) => {
@@ -49,7 +49,7 @@ export default (props: {
 
   return (
     <div 
-      class={`absolute w-full h-full z-10 ${
+      class={`absolute w-full h-full z-50 ${
         dragging() ? "" : "pointer-events-none"
       }`}
     >

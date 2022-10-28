@@ -1,9 +1,0 @@
-body {
-  height: 100vh;
-  overflow: hidden;
-  font-family: gas;
-}
-@font-face {
-  font-family: "gas";
-  src: url("./assets/gas.ttf");
-}

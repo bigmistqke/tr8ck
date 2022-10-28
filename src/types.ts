@@ -11,7 +11,6 @@ interface InstrumentBase {
   fxChains: DSPElement[][]
   compilingIds: string[]
   speed: number
-  nothings: DSPElement[]
 }
 
 export interface Sampler extends InstrumentBase {
@@ -26,6 +25,7 @@ export interface Sampler extends InstrumentBase {
     end: number
   }
   speed: number
+  arrayBufferName?: string
   waveform?: Waveform
   audioBuffer?: AudioBuffer
   node?: undefined
@@ -35,7 +35,7 @@ export interface Sampler extends InstrumentBase {
 export interface Synth extends InstrumentBase {
   type: "synth"
   code: string
-  element: FaustElement
+  elements: FaustElement[]
   // node: Faust2WebAudio.FaustAudioWorkletNode | undefined
   error?: string
 }
@@ -46,10 +46,19 @@ export type createFaustNode = (
 ) => Promise<Faust2WebAudio.FaustAudioWorkletNode | undefined>
 
 export interface ActiveNote {
-  active: true
+  type: "active"
   frequency: number
   instrumentIndex: number
 }
+export interface SilenceNote {
+  type: "silence"
+}
+export interface InactiveNote {
+  type: "inactive"
+}
+
+export type Note = ActiveNote | InactiveNote | SilenceNote
+
 export interface Inactive {
   active: false
   node?: undefined
@@ -57,7 +66,6 @@ export interface Inactive {
   navigation?: undefined
   selection?: undefined
 }
-export type Note = ActiveNote | Inactive
 
 export interface Pattern {
   sequences: Note[][]
@@ -66,6 +74,10 @@ export interface Pattern {
 }
 
 export type Indices = [number, number]
+
+interface FaustCompilationSucces {success: true, dsp: TCompiledDsp} 
+interface FaustCompilationError {success: false, error: string}
+export type FaustCompilationResponse = FaustCompilationSucces | FaustCompilationError
 
 export interface Waveform {
   min: number[]
@@ -118,14 +130,13 @@ export interface FaustParameter {
 }
 
 export interface Track {
-  source?: AudioBufferSourceNode
   instrumentIndex?: number
   frequency: number
   semitones: number
   fxChain: DSPElement[]
-  pitchshifter?: FaustAudioWorkletNode
   compilingIds: string[]
-  // solo: boolean
+  playingInstrument?: AudioBufferSourceNode | FaustElement;
+  pitchshifter?: FaustAudioWorkletNode
 }
 
 

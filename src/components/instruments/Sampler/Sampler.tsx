@@ -1,4 +1,4 @@
-import { batch, createSignal, For, Show } from "solid-js"
+import { batch, createEffect, createSignal, For, Show } from "solid-js"
 import copyArrayBuffer from "../../../utils/copyArrayBuffer"
 import fileToArrayBuffer from "../../../utils/fileToArrayBuffer"
 import { actions, store } from "../../../Store"
@@ -6,6 +6,7 @@ import { Sampler } from "../../../types"
 import arrayBufferToWaveform from "../../../waveform/arrayBufferToWaveform"
 import { Block, Button, ButtonBar, SliderBar } from "../../UIElements"
 import WaveVisualizer from "./WaveVisualizer"
+import SamplerList from "./SamplerList"
 
 
 
@@ -15,34 +16,14 @@ export default () => {
 
   const [filesOpened, setFilesOpened] = createSignal(false);
 
-  const uploadFile = async () => {
-    if(!store.context) return;
-    const file = input.files![0];
-    const arrayBuffer = await fileToArrayBuffer(file)
-    setFilesOpened(false)
-    actions.addToArrayBuffers({arrayBuffer: copyArrayBuffer(arrayBuffer), name: file.name})
-    await actions.processSamplerArrayBuffer({arrayBuffer, name: file.name})
-  } 
+  createEffect(() => {
+    
+  })
 
-  const SampleList = () => {
-    return <div class="flex flex-col flex-1 gap-2 ">
-      <div class="flex flex-col flex-1 gap-2 p-2 rounded-xl overflow-auto">
-        <For each={store.arrayBuffers}>
-        {
-          ({arrayBuffer, name}) => <div class="flex-0 h-10">
-              <Button
-              onclick={()=>actions.processSamplerArrayBuffer({arrayBuffer,name})}
-              class="h-10 w-full flex shrink-0 justify-center break-all items-center rounded-xl text-2xl cursor-pointer bg-white hover:bg-black hover:text-white"
-            >{name}</Button>
-            </div>
-        }
-      </For>
-      </div>
-      <div class="flex-0 ">
-      <Button class="h-10 w-full" onclick={()=>input.click()}>+</Button>
-  
-      </div>
-    </div>
+  const onInput = (e: InputEvent) => {
+    const file = input.files![0];
+    actions.uploadAudioFile(file)
+    setFilesOpened(false);
   }
 
   return (
@@ -51,14 +32,14 @@ export default () => {
           <Block 
             class="relative flex-1 flex overflow-hidden" 
           >
-            <Show when={!filesOpened()} fallback={<SampleList/>}>
+            <Show when={!filesOpened()} fallback={<SamplerList input={input!} setFilesOpened={setFilesOpened}/>}>
               <WaveVisualizer instrument={instrument()} />
             </Show>
           </Block>
           </div>
         
         <div class="flex gap-2">
-            <input type="file" ref={input!} oninput={uploadFile} hidden/>
+            <input type="file" ref={input!} oninput={onInput} hidden/>
             <ButtonBar onclick={() => {
               if(store.arrayBuffers.length > 0)  
                setFilesOpened(bool => !bool);
