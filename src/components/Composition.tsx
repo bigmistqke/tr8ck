@@ -139,13 +139,13 @@ const Macro = () => {
           <div class="flex gap-2 h-6" >
             <Button 
               selected={store.playMode === "pattern"}
-              // class={`${store.playMode === "pattern" ? "bg-black text-white" : "bg-white"}`}
+              // class={`${store.playMode === "pattern" ? "bg-neutral-900 text-white" : "bg-white"}`}
               onclick={()=>actions.setPlayMode("pattern")}
             >LOOP</Button>  
 
             <Button 
               selected={store.playMode === "composition"}
-              // class={`${store.playMode === "composition" ? "bg-black text-white" : "bg-white"}`}
+              // class={`${store.playMode === "composition" ? "bg-neutral-900 text-white" : "bg-white"}`}
               onclick={()=>actions.setPlayMode("composition")}
             >COMP</Button>  
           </div>

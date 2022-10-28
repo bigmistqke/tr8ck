@@ -7,19 +7,23 @@ import { actions } from "../Store";
 import { Button } from "./UIElements";
 import { FaustCompilationResponse, FaustElement } from "../types";
 
-export interface FaustCodeEditorProps {
+import s from "./EditorModal.module.css";
+
+export interface EditorModalProps {
   id: string
-  code: string
+  code: () => string
   compile: (code: string) => Promise<FaustCompilationResponse>
 }
 
-export default (props: FaustCodeEditorProps) => {
+export default (props: EditorModalProps) => {
   let editorRef : HTMLDivElement;
   let containerRef : HTMLDivElement;
 
   const [position, setPosition] = createSignal({left: (window.innerWidth - 504) / 2, top: (window.innerHeight - 412) / 2})
   const [dragging, setDragging] = createSignal(false)
   const [state, setState] = createSignal<EditorState>();
+  const [error, setError] = createSignal<string | undefined>()
+
 
   const mousedown = async () => {
     setDragging(true);
@@ -36,10 +40,13 @@ export default (props: FaustCodeEditorProps) => {
   const compile = async (e: MouseEvent) => {
     e.stopPropagation();
     // TODO: find out the proper way to do this...
-    const code = (containerRef.querySelector(".cm-content") as HTMLElement).innerText;
+    const innerText = (containerRef.querySelector(".cm-content") as HTMLElement).innerText;
+    const code = innerText.replaceAll(/\n\n/g, "\n") 
+    console.log("code is ", code);
+
     if(!code) return;
-    const dsp = await props.compile(code);
-    
+    const result = await props.compile(code);
+    setError("error" in  result ? result.error : undefined)
   }
 
   const close = (e: MouseEvent) => {
@@ -52,42 +59,44 @@ export default (props: FaustCodeEditorProps) => {
       class={`absolute w-full h-full z-50 ${
         dragging() ? "" : "pointer-events-none"
       }`}
+      
     >
       <div 
         ref={containerRef!}
         onmousedown={mousedown}
-        class="absolute bg-neutral-200 pb-12 p-4 rounded-xl cursor-move shadow-xl pointer-events-auto resize"
+        class={`absolute bg-neutral-100 max-w-full max-h-full pb-12 p-2 rounded-xl cursor-move shadow-xl pointer-events-auto resize ${
+          s.editorModal
+        }`}
         style={{
           "margin-left": position().left +"px",
-          "margin-top": position().top +"px"
+          "margin-top": position().top +"px",
+          // "max-width": "100vw"
         }}
 
       >
         <div class={`flex flex-col gap-2 ${
           dragging() ? "pointer-events-none select-none" : ""}
         }`}>
-          <div class="flex flex-0 gap-2 h-12">
+          <div class="flex flex-0 gap-2 h-6">
             <Button 
-              class="h-12" 
               onmousedown={compile}
             >
-              save
+              compile
             </Button>
-            <Button 
-              class="h-12" 
-              onmousedown={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              save as
-            </Button>
-            <Button class="h-12" onmousedown={close} children="close"/>
+            <Button onmousedown={close} children="close"/>
           </div>
-          <div>
+          <div class="">
             <CodeMirror 
               code={props.code}
               setState={setState}
-              class={dragging() ? "pointer-events-none select-none" : ""}
+              class={`min-w-full h-64 w-128 resize ${
+                dragging() ? "pointer-events-none select-none" : ""
+              }`}
+              /* containerStyle={{
+                "max-width": "75v"
+              }} */
+              error={error()}
+              reverseIcon={true}
             />
           </div>
         </div>

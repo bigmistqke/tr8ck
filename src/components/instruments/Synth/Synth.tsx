@@ -22,30 +22,22 @@ const Synth = (props: {
   let container: HTMLDivElement
 
   const [listOpened, setListOpened] = createSignal(false)
-  const [codeTitle, setCodeTitle] = createSignal("default")
-  const [saveMenuOpened, setSaveMenuOpened] = createSignal(false);
-  const [synth, setSynth] = createStore(props.instrument)
+  const [error, setError] = createSignal<string | undefined>(undefined);
 
-  const setCode = (code?: string) => {
-    code = code || (container.querySelector(".cm-content") as HTMLElement).innerText
-    actions.setInstrument(store.selection.instrumentIndex, produce((instrument) => (instrument as SynthType).code = code))
-    return code;
-  }
-
-  const processCode = async () => {
-    const code = setCode();
-
-    if(!store.context || !code) return;
-
-    const result = await actions.compileFaust(code);
-
+  const processCode = async (code?: string ) => {
+    let c = code || (container.querySelector(".cm-content") as HTMLElement).innerText
+    c = c.replaceAll(/\n\n/g, "\n") 
+    actions.setInstrument(store.selection.instrumentIndex, produce((instrument) => (instrument as SynthType).code = c))
+    const result = await actions.compileFaust(c);
     
-
-    if(!result.success) return;
+    if(!result.success){
+      setError(result.error)
+      return result;
+    }else{
+      setError(undefined);
+    }
 
     const factory = actions.createFactory(result.dsp, zeptoid());
-
-    
 
     const elements = (await Promise.all(
       store.tracks.map(track => 
@@ -63,13 +55,18 @@ const Synth = (props: {
     })
 
     actions.setSelectedInstrument("elements", elements);
+    return result;
   }
 
   const openEditor = () => {
     actions.addToEditors({
       id: zeptoid(),
-      code: props.instrument.code, 
-      compile: (code) => actions.compileFaust(code)
+      code: () => props.instrument.code, 
+      compile: async (code) => {
+        // const result = actions.compileFaust(code)
+        const result = await processCode(code)
+        return result!;
+      }
     })
   }
 
@@ -83,7 +80,6 @@ const Synth = (props: {
 
     untrack(() => {
       elements[0].parameters.forEach((parameter, parameterIndex) => {
-
         elements.forEach((element, index) => {
           if(index === 0) return;
           const newValue = values[parameterIndex]
@@ -101,63 +97,57 @@ const Synth = (props: {
 
   return (
   <>
-      <Show when={saveMenuOpened()}>
-          <SynthSaveModal setSaveMenuOpened={setSaveMenuOpened} codeTitle={codeTitle()} code={props.instrument.code}/>
-      </Show>
-      <div class="flex flex-1 flex-col gap-2">
-          <Switch>
-              <Match when={listOpened()}>
-                  <SynthList 
-                    setCode={(code)=>{
-                      // console.log("")
-                      setListOpened(false) 
-                      if(code){
-                        setCode(code);
-                        processCode();
-                      }else{
-                          console.error("code or title is undefined", code)
-                      }
-                    }}
-                  />
-                  
-              </Match>
-              <Match when={!listOpened()}>
-                  <div 
-                    class="flex flex-col h-48 rounded-xl overflow-auto"
-                    ref={container!}
-                  >
-                    <CodeMirror 
-                      code={props.instrument.code}
-                      class={"h-full"}
-                    />
-                  </div>
-              </Match>
-          </Switch>
-          <div class="flex gap-2 h-6" >
-            <Button onclick={processCode}>
-              compile
-            </Button>
-            <Button onclick={()=>setSaveMenuOpened(true)}>
-              save as
-            </Button>
-            <Button onclick={() => setListOpened(bool => !bool)}>
-              {!listOpened() ? "open" : "close"} list
-            </Button>
-            <Button 
-              onclick={openEditor}>
-              window
-            </Button>
-          </div>
-          
-          <Show when={props.instrument.elements[0]} >
-            <Block 
-              class={`relative flex gap-2 h-24 p-2 bg-white whitespace-nowrap overflow-x-auto ${props.class}`}
-            >
-              <Fx state={props.instrument.elements[0]} disableOnOff={true}/>
-            </Block>              
-          </Show>
-          {/* <FxChain fxChain={[]} createNodeAndAddToFxChain={() => {}} compilingIds={[]}/> */}
+    <div class="flex flex-1 flex-col gap-2">
+      <div 
+        class="flex flex-col h-48"
+        ref={container!}
+      >
+        <Switch>
+          <Match when={listOpened()}>
+            <SynthList 
+              setCode={(code)=>{
+                setListOpened(false) 
+                if(code){
+                  // setCode(code);
+                  processCode(code);
+                }else{
+                    console.error("code or title is undefined", code)
+                }
+              }}
+            />
+          </Match>
+          <Match when={!listOpened()}>
+            <CodeMirror 
+              code={() => props.instrument.code}
+              class={"h-full"}
+              error={error()}
+              containerClass="flex flex-col h-full"
+            />
+          </Match>
+        </Switch>
       </div>
+
+      <div class="flex gap-2 h-6" >
+        <Button onclick={e => processCode()}>
+          compile
+        </Button>
+        <Button onclick={() => setListOpened(bool => !bool)}>
+          {!listOpened() ? "open" : "close"} list
+        </Button>
+        <Button 
+          onclick={openEditor}>
+          window
+        </Button>
+      </div>
+      
+      <Show when={props.instrument.elements[0]} >
+        <Block 
+          class={`relative flex gap-2 h-24 p-2 bg-white whitespace-nowrap overflow-x-auto ${props.class}`}
+        >
+          <Fx state={props.instrument.elements[0]} disableOnOff={true}/>
+        </Block>              
+      </Show>
+    </div>
   </>)
 }
 

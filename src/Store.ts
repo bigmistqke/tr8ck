@@ -7,14 +7,14 @@ import {
 import { batch, createEffect, createRoot, onCleanup, untrack } from "solid-js";
 import { createStore, produce, StoreSetter } from "solid-js/store";
 import zeptoid from "zeptoid";
-import { FaustCodeEditorProps } from "./components/FaustCodeEditor";
+import { EditorModalProps } from "./components/EditorModal";
 import FxChain from "./components/Fx/FxChain";
 
 import { DEFAULT_FX, EXTRA_FXS, FXS, INSTRUMENT_AMOUNT, ROOT_FREQUENCY, SEQUENCE_LENGTH, TRACK_AMOUNT } from "./constants";
 import { defaultPattern, defaultSampler, defaultSequences, defaultSynth } from "./defaults";
 import getParametersFromDsp from "./faust/collectParameters";
 
-import { DSPElement, FaustElement, FaustFactory, FaustParameter, Instrument, Note, Pattern, Sampler, Synth, Track, Waveform, WebAudioElement } from "./types";
+import { Choice, DSPElement, FaustElement, FaustFactory, FaustParameter, Instrument, Note, Pattern, Sampler, Synth, Track, Waveform, WebAudioElement } from "./types";
 import ARRAY from "./utils/ARRAY";
 import bpmToMs from "./utils/bpmToMs";
 import copyArrayBuffer from "./utils/copyArrayBuffer";
@@ -31,6 +31,8 @@ import arrayBufferToWaveform from "./waveform/arrayBufferToWaveform";
 import audioBufferToWaveform from "./waveform/audioBufferToWaveform";
 
 import {Buffer} from "buffer";
+import { ContextMenuProps } from "./components/ContextMenu";
+import download from "./utils/download";
 
 // import * as flate from 'wasm-flate';
 
@@ -53,7 +55,7 @@ const [store, setStore] = createStore<{
   composition: ({id: string, patternId: string})[]
   faustFactories: FaustFactory[]
   instruments: (Instrument)[]
-  editors: FaustCodeEditorProps[]
+  editors: EditorModalProps[]
   selection: {
     frequency: number
     instrumentIndex: number
@@ -84,6 +86,7 @@ const [store, setStore] = createStore<{
   mic?: MediaStream
   solos: number[]
   disposes: any[]
+  contextmenu?: ContextMenuProps
 }>({
   clock: -1,
   faust: undefined,
@@ -130,7 +133,19 @@ const [store, setStore] = createStore<{
   arrayBuffers: [],
   mic: undefined,
   solos: [],
-  disposes: []
+  // TODO: disposes collects all the createRoot-dispose-functions
+  // figure out a better way to structure these into the code
+  disposes: [],
+  contextmenu: {
+    options: [
+      {title: "test", callback: () => console.log("test")},
+      {title: "test2", callback: () => console.log("test")},
+      {title: "test3", callback: () => console.log("test")}
+
+    ],
+    bottom: 0,
+    left: 0
+  }
 })
 
 // INIT
@@ -153,6 +168,7 @@ const initFaust = async () => {
 }
 
 const initKeyboard = () => {
+  window.addEventListener("resize", () => setStore("contextmenu", undefined))
   window.addEventListener("mousedown", () => setStore("bools", "mousedown", true))
   window.addEventListener("mouseup", () => setStore("bools", "mousedown", false))
   window.addEventListener("blur", () => {
@@ -185,9 +201,9 @@ const initKeyboard = () => {
         break;
       case "KeyR":
         if(store.keys.shift)
-          actions.recordAudio(false)
+          actions.recordAudio("file")
         if(store.keys.alt)
-          actions.recordAudio(true)
+          actions.recordAudio("resample")
         break;
     }
   }
@@ -369,7 +385,7 @@ const compileFaust = async (code: string) : Promise<{success: true, dsp: TCompil
     return {success: true, dsp}
   }catch(error: any){
     console.error("code can not compile: ", code, error)
-    return {success: false, error}
+    return {success: false, error: error.toString()}
   }}
 
 
@@ -394,9 +410,10 @@ const createFaustNode = async (dsp: TCompiledDsp) : Promise<Faust2WebAudio.Faust
 const addFx = async () => {
   const id = zeptoid()
 
+
   addToEditors({
     id,
-    code: DEFAULT_FX,
+    code: () => DEFAULT_FX,
     compile: async (code:string) => {
       const response = await compileFaust(code);
       if(response.success){
@@ -1231,7 +1248,7 @@ const renderAudio = (clock: number) => {
 
 const setDragging = (type: "fx", data: any) => setStore("dragging", type, data)
 
-const addToEditors = (editor: FaustCodeEditorProps) => {
+const addToEditors = (editor: EditorModalProps) => {
   if(store.editors.find(e => editor.id === e.id)) return;
   setStore("editors", (editors) => [...editors, editor])
 }
@@ -1347,25 +1364,7 @@ function parseArrayBufferString(string: string) {
   return new Uint8Array(string.split(',')).buffer
 }
 
-function download(content: string, filename: string) {
-  var element = document.createElement('a');
 
-  const blob = new Blob([content], {
-    type: 'text/plain'
-  });
-
-  element.setAttribute('href', URL.createObjectURL(blob));
-  element.setAttribute('download', filename);
-
-  element.style.display = 'none';
-  document.body.appendChild(element);
-
-  
-
-  element.click();
-
-  document.body.removeChild(element);
-}
 
 
 const serializeFxChain = (fxChain: DSPElement[]) => 
@@ -1574,8 +1573,22 @@ const openLocalSet = async (data: SerializeData) => {
   ))
 
   setStore("bools", "playing", true)
-
 }
+
+const openContextMenu = ({e, options} : {e: MouseEvent, options: Choice[]}) => {
+  e.preventDefault();
+  setStore("contextmenu", {
+    options,
+    bottom: window.innerHeight - e.clientY,
+    left: e.clientX
+  })
+}
+
+
+const closeContextMenu = () => {
+  setStore("contextmenu", undefined)
+}
+
 
 const actions = {
   initContext, initFaust, initKeyboard, initTracks, initFx, initExtraFx, initClock, /* initCodeMirror, */
@@ -1612,7 +1625,8 @@ const actions = {
   togglePlaying, resetPlaying,
   setClock,
   getParametersFromDsp,
-  saveLocalSet, openLocalSet
+  saveLocalSet, openLocalSet,
+  openContextMenu, closeContextMenu
 }
 
 

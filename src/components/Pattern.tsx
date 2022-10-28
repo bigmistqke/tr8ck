@@ -61,7 +61,7 @@ export default () => {
                       <Button 
                           class={`flex-1 ${
                             store.solos.includes(index()) 
-                              ? "bg-black" 
+                              ? "bg-neutral-900" 
                               : "bg-white"
                           }`}
                           title="solo"
@@ -71,7 +71,7 @@ export default () => {
                     <Button 
                         class={`${
                           store.selection.trackIndex === index() 
-                          ? "bg-black" 
+                          ? "bg-neutral-900" 
                           : "bg-white"
                         } flex-1 h-full`}
                         onclick={() => actions.setSelectedTrackIndex(index())}

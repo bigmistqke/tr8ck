@@ -11,7 +11,7 @@ import mtof from "./utils/mtof"
 import Composition from "./components/Composition"
 import FxPool from "./components/Fx/FxPool"
 
-import FaustCodeEditor from "./components/FaustCodeEditor"
+import FaustCodeEditor from "./components/EditorModal"
 import { Bar, ButtonBar } from "./components/UIElements"
 
 import { TiMediaPause, TiMediaPlay, TiMediaRecord, TiMediaRecordOutline, TiMediaStop } from 'solid-icons/ti'
@@ -19,6 +19,7 @@ import { TbMicrophone, TbMicrophone2 } from 'solid-icons/tb'
 
 
 import jsscompress from "js-string-compression";
+import ContextMenu from "./components/ContextMenu"
 const hm = new jsscompress.Hauffman();
 
 function App() {
@@ -97,8 +98,6 @@ function App() {
           if(!event.target){
             console.error("event.target is undefined")
           }else{
-            /* const uncompressed = window.flate.zlib_decode(event.target.result);
-            console.log(uncompressed); */
             actions.openLocalSet(JSON.parse(event.target.result))
           }
         });
@@ -125,6 +124,9 @@ function App() {
         (editor) => <FaustCodeEditor {...editor}/>
       }
     </For>
+    <Show when={store.contextmenu}>
+      <ContextMenu {...store.contextmenu!}/>
+    </Show>
     <div 
       class="flex flex-1 bg-neutral-200" 
       style={{"filter": "var(--modal-filter)"}}
@@ -135,7 +137,7 @@ function App() {
         <div class="flex flex-col gap-2 p-2">
           <div class="flex-0">
             <Bar class="bg-white flex gap-2 transition-colors">
-              {/* <button class="inline-block bg-black rounded-xl w-4 h-4 margin-auto align-middle"/> */}
+              {/* <button class="inline-block bg-neutral-900 rounded-xl w-4 h-4 margin-auto align-middle"/> */}
               <button 
                 class={`h-4 hover:text-red-500 transition-colors ${store.audioRecorder && store.audioRecorder.type === "resample" ? "animate-record" : ""}`}
                 onclick={() => actions.recordAudio("resample")}

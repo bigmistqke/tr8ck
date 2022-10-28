@@ -191,3 +191,9 @@ export interface AppState {
   mic?: MediaStream
   solos: number[]
 }
+
+export interface Choice{
+  title: string
+  callback: () => void
+}
+

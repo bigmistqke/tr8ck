@@ -98,7 +98,7 @@ const Note = (props: {
     >
       <div
         class={`flex flex-1 h-full relative overflow-hidden rounded-xl hover:bg-selected-instrument ${
-          props.shouldBlink ? "bg-white" : "bg-black"
+          props.shouldBlink ? "bg-white" : "bg-neutral-900"
         }`}
         style={{
           background: getColor(),

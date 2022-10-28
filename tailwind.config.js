@@ -6,6 +6,9 @@ export default {
       xs: ['0.6rem', '0.75rem'],
     },
     extend: {
+      spacing: {
+        '128': '32rem',
+      },
       colors: {
         "selected-instrument": "var(--selected-instrument)",
         "selected-pattern": "var(--selected-pattern) !important"

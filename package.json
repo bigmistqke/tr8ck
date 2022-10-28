@@ -24,6 +24,7 @@
     "@codemirror/lang-python": "^6.0.2",
     "@codemirror/language": "^6.2.1",
     "@codemirror/legacy-modes": "^6.1.0",
+    "@codemirror/lint": "^6.0.0",
     "@codemirror/state": "^6.1.2",
     "@thisbeyond/solid-dnd": "^0.7.2",
     "buffer": "^6.0.3",

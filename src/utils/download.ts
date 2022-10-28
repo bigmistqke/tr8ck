@@ -1,7 +1,17 @@
-export default (content: any, name: string = "") => {
-  const encodedUri = window.URL.createObjectURL(content);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", name);
-  link.click();
+export default (content: string, filename: string) => {
+  var element = document.createElement('a');
+
+  const blob = new Blob([content], {
+    type: 'text/plain'
+  });
+
+  element.setAttribute('href', URL.createObjectURL(blob));
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
 }

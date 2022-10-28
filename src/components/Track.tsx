@@ -66,7 +66,7 @@ export const TinyTrack = (props: {
                 class={`flex flex-1 h-full relative overflow-hidden rounded-xl hover:bg-white ${
                   store.clock % props.amount === index()
                     ? "bg-white"
-                    : "bg-black"
+                    : "bg-neutral-900"
                 }`}
                 style={{
                   filter:
