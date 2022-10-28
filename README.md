@@ -18,10 +18,10 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
   - [ ] group patterns together
   - [ ] loop groups
   - [ ] copy/paste groups
-- [ ] synths with Faust
+- [x] synths with Faust
   - [x] compile custom Faust dsp-code
-  - [ ] editable parameters
-- [ ] sampler
+  - [x] editable parameters
+- [x] sampler
   - [x] wave visualizer and selector
   - [x] timestretch
   - [x] reverse
@@ -30,12 +30,10 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
 - [x] fx with Faust
   - [x] drag'n'drop fx into track or instrument's fx chain
   - [x] edit and recompile Faust code fx
-  - [ ] modulate/sidechain-wrapper
 - [x] code-editor for Faust (CodeMirror6)
   - [x] synthax-highlighting and completions
   - [ ] error handling
-- [ ] automations
-- [ ] save set
+- [x] save set
 - [x] record live / render set
 
 🚧 still under construction, but if you want to go ahead and play around with it, please do! 🚧
