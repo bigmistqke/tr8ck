@@ -18,18 +18,18 @@ const Instrument = () => {
 
     
     return (
-      <Block class="flex flex-0 bg-neutral-100 p-2 w-full">
+      <Block extraClass="flex flex-0 bg-neutral-100 p-2 w-full">
         <div class="flex flex-1 flex-col gap-2 w-full">
             <div class="flex flex-1 flex-col gap-2">
                 <div class="flex  text-black gap-2">
-                    <Bar class="bg-selected-instrument select-none">#{store.selection.instrumentIndex}</Bar>
+                    <Bar extraClass="bg-selected-instrument select-none">#{store.selection.instrumentIndex}</Bar>
                     <ButtonBar 
-                      class="flex-1 text-center bg-white select-none"
+                      extraClass="flex-1 text-center bg-white select-none"
                       selected={actions.getSelectedInstrument().type === "sampler"}
                       onClick={() => actions.setTypeSelectedInstrument("sampler")}
                     >Sampler</ButtonBar>
                     <ButtonBar 
-                      class="flex-1 text-center bg-white" 
+                      extraClass="flex-1 text-center bg-white" 
                       onClick={() => actions.setTypeSelectedInstrument("synth")}
                       selected={actions.getSelectedInstrument().type === "synth"}
                     >Synth</ButtonBar>

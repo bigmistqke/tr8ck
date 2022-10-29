@@ -1,13 +1,12 @@
 import deepClone from "deep-clone"
 import { For, Show } from "solid-js"
-import { createStore } from "solid-js/store"
 import { store } from "../../Store"
-import { FaustFactory, FxNode } from "../../types"
+import { FaustElement, FaustFactory } from "../../types"
 import { Block, CenteredLabel } from "../UIElements"
 import Fx from "./Fx"
 
 export default (props: {
-  fxChain: FxNode[]
+  fxChain: (FaustFactory | FaustElement)[]
   class?: string
   compilingIds: string[]
   createNodeAndAddToFxChain: (
@@ -15,7 +14,7 @@ export default (props: {
       factory: FaustFactory
       id: string
       parameters: any[] | undefined
-      active: true
+      active: boolean
     }, 
     index: number
   ) => void
@@ -24,26 +23,15 @@ export default (props: {
 }) => {  
   let container : HTMLDivElement;
 
-  const [_, setFxChain] = createStore(props.fxChain);
-
-
-  const drop = (e: DragEvent) => {
-    dragCount = 0;
-    e.preventDefault();
-  }
-
-  let dragCount = 0;
-
-  const dragenter = (e: DragEvent) => {
-    // if(e.target.id === store.dragging.fx?.id) return;
-    dragCount++
-  }
+  const drop = (e: DragEvent) => e.preventDefault()
 
   const dragover = async (e:DragEvent) => {
     e.preventDefault()
 
     const draggingFx = store.dragging.fx
+    
     if(draggingFx === undefined) return;
+    
     const {name, id, parameters, active} = draggingFx;
 
     if(
@@ -55,8 +43,6 @@ export default (props: {
 
       const node = {factory, id, parameters: deepClone(parameters), active}
 
-
-      
       props.createNodeAndAddToFxChain(node, props.fxChain.length - 1)
     }
 
@@ -66,17 +52,12 @@ export default (props: {
   const dragleave = (e: DragEvent) => {
     e.preventDefault()
 
-    // if((e.target as HTMLElement).id === store.dragging.fx?.id) return;
-    dragCount--;
+    if(!store.dragging.fx) return;
+    if ((e.currentTarget as HTMLElement).contains((e.relatedTarget as Node))) {return;}
 
-    const draggingFx = store.dragging.fx
+    const {id, detachable} = store.dragging.fx;
 
-    if(draggingFx === undefined) return;
-    const {name, id, detachable} = draggingFx;
-
-
-
-    if(detachable && dragCount === 0){
+    if(detachable){
       props.removeNodeFromFxChain(id)
     }
   }
@@ -85,25 +66,16 @@ export default (props: {
     const index1 = props.fxChain.findIndex(fx => fx.id === id1);
     const index2 = props.fxChain.findIndex(fx => fx.id === id2);
 
-    if(index1 === -1){
-      // setFxChain(produce((fxs) =>ARRAY.insertBeforeElement(fxs, )))
-    }else 
-    if(index2 === -1){
-
-    }else{
-      if(index1 < index2) return;
-      props.updateOrder(index1, index2)
-      dragCount--;
-    }
+    if(index1 < index2) return;
+    props.updateOrder(index1, index2)
   }
 
   return (
     <Block 
-      class={`relative flex gap-2 h-24 p-2 bg-white whitespace-nowrap overflow-x-auto overflow-y-hidden ${props.class}`}
+      extraClass={`relative flex gap-2 h-24 p-2 bg-white whitespace-nowrap overflow-x-auto overflow-y-hidden ${props.class}`}
       ondragover={dragover}
       ondragleave={dragleave}
       ondrop={drop}
-      ondragenter={dragenter}
       ref={container!}
     >
       <Show 
@@ -117,7 +89,6 @@ export default (props: {
                 state={fx} 
                 index={index()} 
                 updateOrder={updateOrder}
-                resetDragCount={() => dragCount = 0}
                 draggable={true}
               />
           }

@@ -14,16 +14,16 @@ export default () => {
   }
 
   return (
-    <Block class="flex flex-col flex-1 gap-2 bg-neutral-100 p-2 overflow-hidden">
+    <Block extraClass="flex flex-col flex-1 gap-2 bg-neutral-100 p-2 overflow-hidden">
       <div class="grid grid-cols-8 flex-0 gap-2 flex-wrap justify-start">
-        <Bar class="bg-white flex-1 col-span-4">FX</Bar>
+        <Bar extraClass="bg-white flex-1 col-span-4">FX</Bar>
         <Button 
-            class="bg-white flex-1 col-span-3"
-            onclick={actions.initExtraFx}
+          extraClass="bg-white flex-1 col-span-3"
+          onclick={actions.initExtraFx}
         >EXTRA FX</Button>
         <AddButton onclick={actions.addFx}/>
       </div>
-      <Block class="flex-1 bg-white overflow-auto">
+      <Block extraClass="flex-1 bg-white overflow-auto">
         <div class="flex flex-1 flex-wrap content-baseline m-2 gap-2">
           <For each={store.faustFactories}>
             {

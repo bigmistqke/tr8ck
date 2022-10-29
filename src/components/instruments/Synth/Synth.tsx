@@ -142,7 +142,7 @@ const Synth = (props: {
       
       <Show when={props.instrument.elements[0]} >
         <Block 
-          class={`relative flex gap-2 h-24 p-2 bg-white whitespace-nowrap overflow-x-auto ${props.class}`}
+          extraClass={`relative flex gap-2 h-24 p-2 bg-white whitespace-nowrap overflow-x-auto`}
         >
           <Fx state={props.instrument.elements[0]} disableOnOff={true}/>
         </Block>              

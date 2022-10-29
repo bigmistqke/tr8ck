@@ -26,7 +26,6 @@ export default () => {
               >
                 tempo
               </ButtonBar> 
-              {/* <ButtonBar onclick={actions.clearSelectedPattern}>auto</ButtonBar> */}
           </div>
           <div class="pl-2 pr-2 mt-1 mb-2 flex-1 flex-col gap-2 overflow-auto" style={{
             "scrollbar-gutter": "stable"
@@ -59,7 +58,7 @@ export default () => {
                   (track, index) => (<div class="flex gap-1 flex-1">
                     <div class="flex flex-0  w-4 p-0.5">
                       <Button 
-                          class={`flex-1 ${
+                          extraClass={`flex-1 ${
                             store.solos.includes(index()) 
                               ? "bg-neutral-900" 
                               : "bg-white"
@@ -69,7 +68,7 @@ export default () => {
                         />
                     </div>
                     <Button 
-                        class={`${
+                        extraClass={`${
                           store.selection.trackIndex === index() 
                           ? "bg-neutral-900" 
                           : "bg-white"

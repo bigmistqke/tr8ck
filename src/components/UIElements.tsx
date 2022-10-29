@@ -3,13 +3,13 @@ import cursorEventHandler from "../utils/cursorEventHandler"
 import { actions } from "../Store"
 
 function Button(
-  props: JSX.HTMLAttributes<HTMLButtonElement> & { selected?: boolean }
+  props: JSX.HTMLAttributes<HTMLButtonElement> & { selected?: boolean, extraClass?: string }
 ) {
   return (
     <button
       {...props}
       class={`flex-1 rounded-lg text-xs tracking-widest uppercase hover:bg-neutral-900 hover:text-white select-none transition-colors drop-shadow-sm ${
-        props.class || ""
+        props.extraClass || ""
       } ${props.selected ? "bg-neutral-900 text-white" : "bg-white"}`}
       style={props.style}
     >
@@ -19,33 +19,35 @@ function Button(
 }
 
 const ButtonBar = (
-  props: JSX.HTMLAttributes<HTMLButtonElement> & { selected?: boolean }
+  props: JSX.HTMLAttributes<HTMLButtonElement> & { selected?: boolean, extraClass?: string }
 ) => {
   return (
     <Button
       {...props}
-      class={`h-6 text-xs tracking-widest text-center select-none  drop-shadow-sm ${props.class || ""}`}
+      extraClass={`h-6 text-xs tracking-widest text-center select-none  drop-shadow-sm ${props.extraClass || ""}`}
     >
       {props.children}
     </Button>
   )
 }
 
-const Block = (props: JSX.HTMLAttributes<HTMLDivElement>) => {
+const Block = (props: JSX.HTMLAttributes<HTMLDivElement> & {extraClass?: string}) => {
+
+
   return (
     <div
       {...props}
-      class={`${props.class || ""} rounded-lg transition-colors  drop-shadow-sm`}
+      class={`rounded-lg overflow-hidden transition-colors box-border ${props.extraClass}`}
     >
       {props.children}
     </div>
   )
 }
 
-const Bar = (props: JSX.HTMLAttributes<HTMLDivElement>) => (
+const Bar = (props: JSX.HTMLAttributes<HTMLDivElement> & {extraClass?: string}) => (
   <Block
     {...props}
-    class={`${props.class} flex flex-1 h-6 max-h-6 items-center justify-center content-center text-center text-xs tracking-widest  drop-shadow-sm`}
+    extraClass={`${props.extraClass} flex flex-1 h-6 max-h-6 items-center justify-center content-center text-center text-xs tracking-widest  drop-shadow-sm`}
   >
     {props.children}
   </Block>
@@ -54,6 +56,7 @@ const Bar = (props: JSX.HTMLAttributes<HTMLDivElement>) => (
 const SliderBar = (
   props: JSX.HTMLAttributes<HTMLDivElement> & {
     onupdate: (delta: number, timespan: number) => void
+    extraClass?: string
   }
 ) => {
   const mousedown = () => {
@@ -66,7 +69,7 @@ const SliderBar = (
     <Block
       {...props}
       onmousedown={mousedown}
-      class={`${props.class} flex flex-1 h-6 content-center items-center justify-center text-center text-xs tracking-widest uppercase bg-white select-none cursor-e-resize  drop-shadow-sm`}
+      extraClass={`${props.extraClass} flex flex-1 h-6 content-center items-center justify-center text-center text-xs tracking-widest uppercase bg-white select-none cursor-e-resize  drop-shadow-sm`}
     >
       {props.children}
     </Block>
@@ -77,14 +80,19 @@ const ButtonWithHoverOutline = (
   props: JSX.HTMLAttributes<HTMLButtonElement> & {
     buttonClass?: string 
     selected?: boolean
+    active?: boolean
   }
 ) => (
   <button onclick={props.onclick} class={`flex-1 flex h-6 ${props.class}`}>
     <div
-      class={`flex flex-1 h-full justify-center items-center text-xs rounded-lg uppercase hover:border-4 hover:border-white select-none  transition-colors  drop-shadow-sm ${
+      class={`flex flex-1 h-full justify-center items-center text-xs rounded-lg uppercase border-2  select-none transition-colors  drop-shadow-sm ${
         props.buttonClass
       } ${
-        props.selected ? "border-white border-4" : ""
+        props.active 
+          ? "border-neutral-900"
+          : props.selected 
+            ? "border-neutral-700 hover:border-neutral-600" 
+            : "border-transparent hover:border-neutral-500"
       }`}
       style={props.style}
     >

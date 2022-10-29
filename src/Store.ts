@@ -4,7 +4,7 @@ import { TCompiledDsp } from "faust2webaudio/src/types";
 import {
   getHex
 } from "pastel-color";
-import { batch, createEffect, createRoot, onCleanup, untrack } from "solid-js";
+import { batch, createEffect, createMemo, createRoot, onCleanup, untrack } from "solid-js";
 import { createStore, produce, StoreSetter } from "solid-js/store";
 import zeptoid from "zeptoid";
 import { EditorModalProps } from "./components/EditorModal";
@@ -14,7 +14,7 @@ import { DEFAULT_FX, EXTRA_FXS, FXS, INSTRUMENT_AMOUNT, ROOT_FREQUENCY, SEQUENCE
 import { defaultPattern, defaultSampler, defaultSequences, defaultSynth } from "./defaults";
 import getParametersFromDsp from "./faust/collectParameters";
 
-import { Choice, DSPElement, FaustElement, FaustFactory, FaustParameter, Instrument, Note, Pattern, Sampler, Synth, Track, Waveform, WebAudioElement } from "./types";
+import { Choice, CompositionBlockProps, CompositionElementProps, CompositionGroupProps, DSPElement, FaustElement, FaustFactory, FaustParameter, Instrument, Note, Pattern, Sampler, Synth, Track, Waveform, WebAudioElement } from "./types";
 import ARRAY from "./utils/ARRAY";
 import bpmToMs from "./utils/bpmToMs";
 import copyArrayBuffer from "./utils/copyArrayBuffer";
@@ -33,16 +33,31 @@ import audioBufferToWaveform from "./waveform/audioBufferToWaveform";
 import {Buffer} from "buffer";
 import { ContextMenuProps } from "./components/ContextMenu";
 import download from "./utils/download";
+import {Composition} from "./types";
+import moveInArray from "./utils/moveInArray";
 
 // import * as flate from 'wasm-flate';
 
+interface DraggingFx {
+  id: string
+  name: string
+  detachable: boolean
+  parameters?: any[]
+  active: boolean
+}
 
+interface CompositionFx  {
+  id: string
+  patternId: string
+  type: "composition" | "pattern"  
+}
 
 const [store, setStore] = createStore<{
   faust?: Faust
   context?: AudioContext
   clock: number
   clockOffset: number
+  compositionClock: number
   bpm: number
   playMode: "pattern" | "composition"
   rootNode?: AudioNode
@@ -52,7 +67,7 @@ const [store, setStore] = createStore<{
   }
   patterns: Pattern[]
   tracks: Track[]
-  composition: ({id: string, patternId: string})[]
+  composition: Composition
   faustFactories: FaustFactory[]
   instruments: (Instrument)[]
   editors: EditorModalProps[]
@@ -62,6 +77,7 @@ const [store, setStore] = createStore<{
     patternId: string
     blockId?: string
     trackIndex: number
+    composition: Composition
   }
   keys: {
     shift: boolean
@@ -69,13 +85,8 @@ const [store, setStore] = createStore<{
     alt: boolean
   }
   dragging: {
-    fx: {
-      id: string
-      name: string
-      detachable: boolean
-      parameters?: any[]
-      active?: boolean
-    } | undefined
+    fx: DraggingFx | undefined,
+    composition: CompositionFx | undefined
   }
   bools: {
     playing: boolean
@@ -89,6 +100,7 @@ const [store, setStore] = createStore<{
   contextmenu?: ContextMenuProps
 }>({
   clock: -1,
+  compositionClock: 0,
   faust: undefined,
   context: new window.AudioContext(),
   playMode: "pattern",
@@ -114,7 +126,8 @@ const [store, setStore] = createStore<{
     instrumentIndex: 0,
     patternId: "first",
     blockId: undefined,
-    trackIndex: 0
+    trackIndex: 0,
+    composition: []
   },
   keys: {
     shift: false,
@@ -123,7 +136,8 @@ const [store, setStore] = createStore<{
   },
   faustFactories: [],
   dragging: {
-    fx: undefined
+    fx: undefined,
+    composition: undefined
   },
   bools: {
     playing: true,
@@ -230,15 +244,20 @@ const initKeyboard = () => {
 
 let lastTime = performance.now();
 
+
+
 const initClock = function(){
   setStore("clockOffset", performance.now())
+
+
+
 
   const run = () => {
     if(!store.bools.playing) return
     requestAnimationFrame(run);
     const c = Math.floor((performance.now() - store.clockOffset) / bpmToMs(store.bpm));
     if(c > store.clock){
-      // console.log((performance.now() - lastTime )- bpmToMs(store.bpm))
+      setStore("compositionClock", Math.floor(store.clock / SEQUENCE_LENGTH) % getCompositionSize())
       setStore("clock", c);
       renderAudio(c);
       lastTime = performance.now();
@@ -1083,6 +1102,154 @@ const toggleTrackSolo = (index: number) => {
 // COMPOSITION
 
 const getBlockIndex = (blockId: string) => store.composition.findIndex(block => block.id === blockId) 
+const getCompositionBlockSize = (block: CompositionBlockProps) => {
+  let count = 0;
+  const walk = (block: CompositionBlockProps) => {
+    if(block.type === "element")
+      count++
+    else{
+      count += block.size
+    }
+  }
+  walk(block)
+  return count;
+}
+const getArrayCompositionBlockSize = (blocks: Composition) => 
+  blocks.length > 0 
+  ? blocks.map(getCompositionBlockSize).reduce((a,b) => a + b)
+  : 0
+
+const getCompositionSize = createMemo(() => getArrayCompositionBlockSize(store.composition))
+
+const dragComposition = (
+  targetId: string, 
+  dragId: string, 
+  patternId: string, 
+  position: {
+    x: number;
+    y: number;
+}
+) => {
+  if(!targetId){
+    if(store.composition.find(pattern => pattern.id === dragId))
+        return
+    setStore("composition", produce((composition) => composition.push({id: dragId, patternId, type: "element"})))
+    return;
+  }
+
+  if(targetId === dragId) return
+
+  if(position.y < 0) return
+
+  const targetIndex = actions.getBlockIndex(targetId)
+  const dragIndex = actions.getBlockIndex(dragId)
+  const nextIndex = position.y > 55 ? targetIndex + 1 : targetIndex
+
+  if(dragIndex === -1){
+    setStore("composition", produce((composition) => composition.splice(nextIndex, 0, {id: dragId, patternId, type: "element"})))
+    return
+  }
+
+  setStore("composition", produce((composition) => moveInArray(composition, dragIndex, nextIndex)))
+}
+
+const startCompositionSelection = (elementOrGroup: (CompositionGroupProps | CompositionElementProps)) => {
+  console.log("startCompositionSelection")
+  
+  setStore("selection", "composition", [elementOrGroup])
+}
+
+const getRangeSelection = (from: CompositionBlockProps, to: CompositionBlockProps) => {
+  const firstIndex = store.composition.findIndex(block => block === from);
+  const secondIndex = store.composition.findIndex(block => block === to);
+  return firstIndex < secondIndex ? [firstIndex, secondIndex + 1] : [secondIndex, firstIndex + 1];
+}
+
+const endCompositionSelection = (block: CompositionBlockProps) => {
+  const [from, to] = getRangeSelection(store.selection.composition[0], block)
+  const selection = store.composition.slice(from, to);
+  setStore("selection", "composition", selection);
+}
+
+const resetCompositionSelection = () => setStore("selection", "composition", [])
+
+const groupCompositionSelection = () => {
+  if(store.selection.composition.length < 2){
+    return;
+  }
+
+  const group : CompositionGroupProps = {
+    type: "group",
+    id: zeptoid(),
+    color: getHex(),
+    size: getArrayCompositionBlockSize(store.selection.composition),
+    blocks: store.selection.composition
+  }
+
+  const [from, to] = getRangeSelection(
+    store.selection.composition[0], 
+    store.selection.composition[store.selection.composition.length - 1]
+  )
+
+  // const index = store.composition.findIndex(block => block === )
+
+    console.log(from, from - to);
+
+  setStore("composition", produce(composition => composition.splice(from, to - from, group)))
+
+  resetCompositionSelection();
+
+}
+
+const ungroupCompositionGroup = (group: CompositionGroupProps) => {
+  const index = store.composition.findIndex(block => block === group);
+  if(!index){
+    console.log("could not find the index", index);
+  }
+
+  setStore("composition", produce((composition) => composition.splice(index, 1, ...group.blocks)))
+}
+
+
+const renameIdsCompositionBlock = (block: CompositionBlockProps ) => {
+  const walk = (block: CompositionBlockProps) => {
+    block = {
+      ...block,
+      id: zeptoid(),
+    }
+
+    if(block.type === "group")
+      block.blocks = block.blocks.map(block => walk(block))
+    
+    return block
+  }
+  return walk(block)
+}
+
+
+const duplicateCompositionSelection = () => {
+  const lastBlock = store.selection.composition[store.selection.composition.length -1]
+  
+  // TODO: figure out how to do nested block duplication
+  const index = store.composition.findIndex(block => block === lastBlock);
+  
+  if(index === -1){
+    console.error('could not find block in composition')
+    return;
+  }
+
+  const duplicate = store.selection.composition.map(block => renameIdsCompositionBlock(block))
+
+  setStore("composition", produce((composition) => composition.splice(index, 0, ...duplicate)))
+  resetCompositionSelection();
+}
+
+
+const loopCompositionSelection = () => {
+
+}
+
+
 
 // AUDIO-ENGINE
 
@@ -1208,19 +1375,40 @@ const playNote = (instrumentIndex: number, frequency: number, trackIndex: number
   }
 }
 
+
+
+const findPlayingCompositionElement = (index: number) => {
+  let count = 0;
+  let playingElement: CompositionElementProps | undefined = undefined;
+  const walk = (block: CompositionBlockProps) => {
+    if(playingElement) return;
+    if(block.type === "element"){
+      if(count === index) {
+        playingElement = block
+      }
+      count++
+    }else{
+      block.blocks.forEach(walk)
+    }
+  }
+  store.composition.forEach(walk)
+  return playingElement;
+}
+
 const renderAudio = (clock: number) => {
   let pattern;
   if(store.playMode === "composition"){
-    const totalLength = store.composition.length * SEQUENCE_LENGTH;
-    const compositionClock = clock;
-    const index = Math.floor(clock / SEQUENCE_LENGTH) % store.composition.length;
+    const index = Math.floor(clock / SEQUENCE_LENGTH) % getCompositionSize();
 
-    const block = store.composition[index];
-
-    if(!block) {
+    if(store.composition.length === 0) {
       pattern = getSelectedPattern()
     }else{
-      const {patternId, id} = store.composition[index];
+      const element = findPlayingCompositionElement(index);
+      if(!element) {
+        console.error("CAN NOT FIND ELEMENT IN COMPOSITION!!!")
+        return;
+      }
+      const {patternId, id} = element;
       pattern = store.patterns.find(pattern => pattern.id === patternId);
       setStore("selection", "blockId", id);
       setSelectedPatternId(patternId)
@@ -1246,7 +1434,7 @@ const renderAudio = (clock: number) => {
   })
 }
 
-const setDragging = (type: "fx", data: any) => setStore("dragging", type, data)
+const setDragging = (type: "fx" | "composition", data: any) => setStore("dragging", type, data)
 
 const addToEditors = (editor: EditorModalProps) => {
   if(store.editors.find(e => editor.id === e.id)) return;
@@ -1617,7 +1805,9 @@ const actions = {
   createNodeAndAddToFxChainTrack, removeNodeFromFxChainTrack, updateOrderFxChainTrack,
   setSelectedPatternId, incrementSelectedPatternId, getSelectedPattern, clearSelectedPattern, copySelectedPattern, 
   getPatternIndex, getPatternColor,
-  getBlockIndex,
+  getBlockIndex, dragComposition,
+  startCompositionSelection, endCompositionSelection, resetCompositionSelection, 
+  groupCompositionSelection, ungroupCompositionGroup, duplicateCompositionSelection, loopCompositionSelection,
   renderAudio,
   setDragging,
   addToEditors, removeFromEditors, setCoding,

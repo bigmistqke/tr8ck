@@ -36,7 +36,8 @@ export default (props: ContextMenuProps) => {
       dir.left = props.left +"px";
     }
 
-    if(bounds.y + bounds.height > window.innerHeight){
+
+    if(bounds.top < 0){
       dir.top = window.innerHeight - props.bottom +"px";
     }else{
       dir.bottom = props.bottom +"px";
@@ -69,7 +70,7 @@ export default (props: ContextMenuProps) => {
           {
             ({title,callback}) => (
               <Button
-                class="w-full h-6 lowercase"
+                extraClass="w-full h-6 lowercase"
                 onmousedown={callback}
               >{title}</Button>
             )
@@ -77,6 +78,5 @@ export default (props: ContextMenuProps) => {
         </For> 
       </div>
     </Portal>
-    
   )
 }

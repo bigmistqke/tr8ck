@@ -20,7 +20,7 @@ export default (props: {
   return <div class="flex flex-col flex-1 gap-2 ">
     <List choices={choices()}/>
     <div class="flex-0 ">
-      <Button class="h-6 w-full" onclick={()=>props.input.click()}>upload from computer</Button>
+      <Button extraClass="h-6 w-full" onclick={()=>props.input.click()}>upload from computer</Button>
     </div>
   </div>
 }

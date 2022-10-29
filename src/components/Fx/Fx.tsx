@@ -1,5 +1,4 @@
-import { FaustAudioWorkletNode } from "faust2webaudio"
-import { createEffect, createSignal, For, onCleanup, onMount, Show } from "solid-js"
+import { createSignal, For, Show } from "solid-js"
 import { actions, store } from "../../Store"
 import { FaustFactory, FaustElement } from "../../types"
 import { Block } from "../UIElements"
@@ -7,14 +6,25 @@ import FxParameter from "./FxParameter"
 import zeptoid from 'zeptoid';
 import s from "./Fx.module.css";
 import { createStore } from "solid-js/store"
-import cursorEventHandler from "../../utils/cursorEventHandler"
+
+const OnOffSwitch = (props: {active: boolean, onOff: () => void}) => (
+  <button 
+    class={`flex-0 left-2 top-2 bg-white w-4 h-2 rounded-xl cursor-pointer ${
+      s.button
+    } ${
+      props.active ? "" : s.inactive
+    }`}
+    onclick={props.onOff}
+  >
+    <div class="w-2 h-2 rounded-xl bg-neutral-900"/>
+  </button>
+)
 
 export default (props: {
   state: (FaustElement | FaustFactory)
   class?: string, 
   index?: number,
   updateOrder?: (id1: string, id2: string) => void 
-  resetDragCount?: () => void
   disableOnOff?: boolean
   draggable?: boolean
   factory?: boolean
@@ -27,8 +37,6 @@ export default (props: {
     if(props.draggable && !props.factory)
       setDraggable(true);
 
-    if(props.resetDragCount !== undefined)
-      props.resetDragCount();
     // "active" in props.state typeguard if it is an FaustNode or a FaustFactory
     const id = "active" in props.state ? props.state.id : zeptoid();
     actions.setDragging("fx", {
@@ -66,25 +74,11 @@ export default (props: {
     return ""
   }
 
-
-
-  const OnOffSwitch = () => (
-    <button 
-      class={`flex-0 left-2 top-2 bg-white w-4 h-2 rounded-xl cursor-pointer ${
-        s.button
-      } ${
-        (props.state as FaustElement).active ? "" : s.inactive
-      }`}
-      onclick={onOff}
-    >
-      <div class="w-2 h-2 rounded-xl bg-black"/>
-    </button>
-  )
-
   const onOff = () => {
     dragend()    
     if(props.disableOnOff) return;
-    if("active" in props.state) setState("active", (bool: boolean) => !bool)
+    if("active" in props.state) 
+      setState("active", (bool: boolean) => !bool)
   }
 
   const [draggable, setDraggable] = createSignal(false);
@@ -93,7 +87,7 @@ export default (props: {
   return (
     <Show when={props.state.initialName !== "input" && props.state.initialName !== "output"}>
       <Block 
-        class={`relative inline-flex flex-col p-1 text-center bg-neutral-200 rounded-lg transition-opacity duration-250 ${
+        extraClass={`relative inline-flex flex-col p-1 text-center bg-neutral-200 rounded-lg transition-opacity duration-250 ${
           props.class || ""
         } ${
           getOpacity()
@@ -117,18 +111,23 @@ export default (props: {
             onmousedown={props.draggable ? dragstart : undefined}
           >
             <Show when={!props.disableOnOff}>
-              <OnOffSwitch/>
+              <OnOffSwitch onOff={onOff} active={ "active" in props.state ? props.state.active : true}/>
             </Show>
-            <span class="flex-1 select-none text-neutral-500 pr-2 pl-2 uppercase" style={{"font-size": "8pt", "margin-bottom": "1px"}}>
+            <span 
+              class="flex-1 select-none text-neutral-500 pr-2 pl-2 uppercase" 
+              style={{"font-size": "8pt", "margin-bottom": "1px"}}
+            >
               { getName() } 
             </span>
             <Show when={"active" in props.state}>
                 <div class="w-2"/>
             </Show>
           </div>
-          <div class={`flex flex-1 ${
-            props.factory ? "flex-wrap" : ""
-          } justify-center gap-4 pl-2 pr-2`}>
+          <div 
+            class={`flex flex-1 ${
+              props.factory ? "flex-wrap" : ""
+            } justify-center gap-4 pl-2 pr-2`}
+          >
             <For each={props.state.parameters}>
               {
                 (parameter) => 
@@ -143,6 +142,5 @@ export default (props: {
         </div>
       </Block>
     </Show>
-    
   )
 }

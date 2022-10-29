@@ -139,61 +139,25 @@ export interface Track {
   pitchshifter?: FaustAudioWorkletNode
 }
 
-
-export interface AppState {
-  faust?: Faust
-  context?: AudioContext
-  clock: number
-  clockOffset: number
-  bpm: number
-  playMode: "pattern" | "composition"
-  rootNode?: AudioNode
-  audioRecorder?: {
-    recorder: AudioNodeRecorder
-    type: "mic" | "file" | "resample"
-  }
-  patterns: Pattern[]
-  tracks: Track[]
-  composition: ({id: string, patternId: string})[]
-  faustFactories: FaustFactory[]
-  instruments: (Instrument)[]
-  editors: {
-    id: string
-    code: string
-    oncompile: (dsp: TCompiledDsp) => void
-  }[]
-  selection: {
-    frequency: number
-    instrumentIndex: number
-    patternId: string
-    blockId?: string
-    trackIndex: number
-  }
-  keys: {
-    shift: boolean
-    control: boolean
-    alt: boolean
-  }
-  dragging: {
-    fx: {
-      id: string
-      name: string
-      detachable: boolean
-      parameters?: any[]
-      active?: boolean
-    } | undefined
-  }
-  bools: {
-    playing: boolean
-    mousedown: boolean
-  }
-  arrayBuffers: {arrayBuffer: ArrayBuffer, name: string}[]
-  mic?: MediaStream
-  solos: number[]
-}
-
 export interface Choice{
   title: string
   callback: () => void
 }
 
+export interface CompositionElementProps {
+  id: string
+  type: "element"
+  patternId: string
+}
+
+export interface CompositionGroupProps {
+  id: string
+  type: "group"
+  color: string
+  blocks: Composition
+  size: number
+}
+
+export type CompositionBlockProps = CompositionElementProps | CompositionGroupProps
+
+export type Composition = (CompositionElementProps | CompositionGroupProps)[]

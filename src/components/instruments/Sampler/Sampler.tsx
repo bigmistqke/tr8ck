@@ -30,7 +30,7 @@ export default () => {
       <>
         <div class="h-48 flex">
           <Block 
-            class="relative flex-1 flex overflow-hidden" 
+            extraClass="relative flex-1 flex overflow-hidden" 
           >
             <Show when={!filesOpened()} fallback={<SamplerList input={input!} setFilesOpened={setFilesOpened}/>}>
               <WaveVisualizer instrument={instrument()} />

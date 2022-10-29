@@ -1,32 +1,26 @@
 import { createEffect, For, onCleanup, onMount, Show } from "solid-js"
-import { actions, setStore, store } from "./Store"
+import { actions, store } from "./Store"
 
 import InstrumentUI from "./components/instruments/Instrument"
-import Patterns from "./components/Pattern"
+import Matrix from "./components/Matrix"
 import Piano from "./components/Piano"
 
 import { Instrument } from "./types"
 import mtof from "./utils/mtof"
 
-import Composition from "./components/Composition"
+import Composition from "./components/Composition/Composition"
 import FxPool from "./components/Fx/FxPool"
 
-import FaustCodeEditor from "./components/EditorModal"
+import EditorModal from "./components/EditorModal"
 import { Bar, ButtonBar } from "./components/UIElements"
 
 import { TiMediaPause, TiMediaPlay, TiMediaRecord, TiMediaRecordOutline, TiMediaStop } from 'solid-icons/ti'
-import { TbMicrophone, TbMicrophone2 } from 'solid-icons/tb'
+import { TbMicrophone } from 'solid-icons/tb'
 
 
-import jsscompress from "js-string-compression";
 import ContextMenu from "./components/ContextMenu"
-const hm = new jsscompress.Hauffman();
 
 function App() {
-
-
-  
-
   const setSelectedColorCSS = () => {
     const instrument = actions.getSelectedInstrument();
     const pattern = actions.getSelectedPattern();
@@ -42,15 +36,6 @@ function App() {
     }
   }
 
-/*   const initContext = async () => {
-    // actions.initContext();
-    window.removeEventListener("mousedown", initContext)
-    await actions.initFaust()
-    await actions.initInstruments()
-    await actions.initTracks()
-    actions.initKeyboard();
-  }
- */
   const initApp = async () => {
     const root = document.documentElement;
     root.style.setProperty('--selected-instrument', actions.getSelectedInstrument().color);
@@ -81,7 +66,6 @@ function App() {
     e.preventDefault(); 
     
     if (e.dataTransfer?.items) {
-      // console.log(e.dataTransfer.items);
       const item = e.dataTransfer.items[0];
       if(!item) return;
       if (item.kind !== 'file') return;
@@ -90,7 +74,6 @@ function App() {
       if(!file) return;
 
       const splitFilename = file.name.split(".")
-      console.log(splitFilename[splitFilename.length - 1]);
       if(splitFilename[splitFilename.length - 1] === "sprint"){
 
         const reader = new FileReader();
@@ -109,11 +92,6 @@ function App() {
   
         actions.uploadAudioFile(file);
       }
-    
-
-    
-     /*  actions.addToArrayBuffers({arrayBuffer, name});
-      await setSamplerFromArrayBuffer(arrayBuffer) */
     }
     return false
   }
@@ -121,7 +99,7 @@ function App() {
   return (<>
     <For each={store.editors}>
       {
-        (editor) => <FaustCodeEditor {...editor}/>
+        (editor) => <EditorModal {...editor}/>
       }
     </For>
     <Show when={store.contextmenu}>
@@ -136,8 +114,7 @@ function App() {
       <div class="flex flex-1 h-full">
         <div class="flex flex-col gap-2 p-2">
           <div class="flex-0">
-            <Bar class="bg-white flex gap-2 transition-colors">
-              {/* <button class="inline-block bg-neutral-900 rounded-xl w-4 h-4 margin-auto align-middle"/> */}
+            <Bar extraClass="bg-white flex gap-2 transition-colors">
               <button 
                 class={`h-4 hover:text-red-500 transition-colors ${store.audioRecorder && store.audioRecorder.type === "resample" ? "animate-record" : ""}`}
                 onclick={() => actions.recordAudio("resample")}
@@ -185,15 +162,14 @@ function App() {
             />
           <div class="flex-0">
             <ButtonBar 
-              class="flex-1 w-full"
+              extraClass="flex-1 w-full"
               onclick={actions.saveLocalSet}
             >
               save
             </ButtonBar>
           </div>
         </div>
-        
-        <Patterns/>
+        <Matrix/>
       </div>
       <div class="flex flex-1 h-full p-2 gap-2">
         <Composition/>

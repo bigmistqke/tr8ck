@@ -137,7 +137,7 @@ export default (props:
     }
   });
 
-  return <div class={`rounded-lg overflow-hidden drop-shadow-sm ${
+  return <div class={`rounded-lg overflow-hidden shadow-sm ${
     !props.error ? "rounded-br-md" : ""
   } ${
     props.containerClass

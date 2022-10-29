@@ -2,7 +2,6 @@
   "name": "tr8ck3r",
   "version": "0.0.0",
   "description": "",
-  "type": "module",
   "scripts": {
     "start": "vite",
     "dev": "vite",
@@ -14,7 +13,7 @@
     "autoprefixer": "^10.4.12",
     "faust2webaudio": "github:grame-cncm/faust2webaudio",
     "postcss": "^8.4.18",
-    "tailwindcss": "^3.1.8",
+    "tailwindcss": "^3.2.1",
     "typescript": "^4.8.4",
     "vite": "^3.1.8",
     "vite-plugin-solid": "^2.3.9"
@@ -39,8 +38,6 @@
     "wasm-flate": "1.0.2-browser",
     "waveform-data": "^4.3.0",
     "wavesurfer.js": "^6.3.0",
-    "worktank": "^2.3.0",
-    "worktank-vite-plugin": "^1.0.0",
     "zeptoid": "^1.0.1"
   }
 }
