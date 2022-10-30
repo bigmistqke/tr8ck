@@ -72,7 +72,7 @@ export default (props: {
 
   return (
     <Block 
-      extraClass={`relative flex gap-2 h-24 p-2 bg-white whitespace-nowrap overflow-x-auto overflow-y-hidden ${props.class}`}
+      extraClass={`relative flex gap-2 h-24 p-2 bg-white flex-nowrap whitespace-nowrap overflow-x-auto overflow-y-hidden ${props.class}`}
       ondragover={dragover}
       ondragleave={dragleave}
       ondrop={drop}
@@ -94,7 +94,6 @@ export default (props: {
           }
         </For>
       </Show>
-      
     </Block>
   )
 }

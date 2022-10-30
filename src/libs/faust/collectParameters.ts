@@ -1,7 +1,7 @@
 import fals from "fals";
 import { FaustAudioWorkletNode } from "faust2webaudio";
 import { TFaustUIItem, TFaustUIGroup, TCompiledDsp } from "faust2webaudio/src/types";
-import { FaustParameter } from "../types";
+import { FaustParameter } from "../../types";
 
 export default (node: FaustAudioWorkletNode | TCompiledDsp) => {
   if(!node) return []

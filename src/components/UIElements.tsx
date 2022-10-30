@@ -8,7 +8,7 @@ function Button(
   return (
     <button
       {...props}
-      class={`flex-1 rounded-lg text-xs tracking-widest uppercase hover:bg-neutral-900 hover:text-white select-none transition-colors drop-shadow-sm ${
+      class={`flex-1 rounded-lg text-xs tracking-widest uppercase hover:bg-neutral-900 hover:text-white select-none transition-colors  ${
         props.extraClass || ""
       } ${props.selected ? "bg-neutral-900 text-white" : "bg-white"}`}
       style={props.style}
@@ -24,7 +24,7 @@ const ButtonBar = (
   return (
     <Button
       {...props}
-      extraClass={`h-6 text-xs tracking-widest text-center select-none  drop-shadow-sm ${props.extraClass || ""}`}
+      extraClass={`h-6 text-xs tracking-widest text-center select-none   ${props.extraClass || ""}`}
     >
       {props.children}
     </Button>
@@ -32,22 +32,20 @@ const ButtonBar = (
 }
 
 const Block = (props: JSX.HTMLAttributes<HTMLDivElement> & {extraClass?: string}) => {
-
-
   return (
     <div
       {...props}
-      class={`rounded-lg overflow-hidden transition-colors box-border ${props.extraClass}`}
+      class={`rounded-lg overflow-auto gap-2 transition-colors box-border ${props.extraClass}`}
     >
       {props.children}
     </div>
-  )
+  ) 
 }
 
 const Bar = (props: JSX.HTMLAttributes<HTMLDivElement> & {extraClass?: string}) => (
   <Block
     {...props}
-    extraClass={`${props.extraClass} flex flex-1 h-6 max-h-6 items-center justify-center content-center text-center text-xs tracking-widest  drop-shadow-sm`}
+    extraClass={`${props.extraClass} flex flex-1 h-6 max-h-6 items-center justify-center content-center text-center text-xs tracking-widest  `}
   >
     {props.children}
   </Block>
@@ -69,7 +67,7 @@ const SliderBar = (
     <Block
       {...props}
       onmousedown={mousedown}
-      extraClass={`${props.extraClass} flex flex-1 h-6 content-center items-center justify-center text-center text-xs tracking-widest uppercase bg-white select-none cursor-e-resize  drop-shadow-sm`}
+      extraClass={`${props.extraClass} flex flex-1 h-6 content-center items-center justify-center text-center text-xs tracking-widest uppercase bg-white select-none cursor-e-resize  `}
     >
       {props.children}
     </Block>
@@ -78,21 +76,22 @@ const SliderBar = (
 
 const ButtonWithHoverOutline = (
   props: JSX.HTMLAttributes<HTMLButtonElement> & {
+    extraClass?: string
     buttonClass?: string 
     selected?: boolean
     active?: boolean
   }
 ) => (
-  <button onclick={props.onclick} class={`flex-1 flex h-6 ${props.class}`}>
+  <button onclick={props.onclick} class={`flex-1 flex h-6 ${props.extraClass}`}>
     <div
-      class={`flex flex-1 h-full justify-center items-center text-xs rounded-lg uppercase border-2  select-none transition-colors  drop-shadow-sm ${
+      class={`flex flex-1 h-full justify-center items-center text-xs rounded-lg uppercase border-2  select-none transition-colors   ${
         props.buttonClass
       } ${
         props.active 
-          ? "border-neutral-900"
+          ? "border-slate-700"
           : props.selected 
-            ? "border-neutral-700 hover:border-neutral-600" 
-            : "border-transparent hover:border-neutral-500"
+            ? "border-slate-500 hover:border-slate-600" 
+            : "border-white hover:border-slate-400"
       }`}
       style={props.style}
     >
@@ -101,15 +100,37 @@ const ButtonWithHoverOutline = (
   </button>
 )
 
+const CompositionBar = (props: {
+  id: string, 
+  color: string
+  selected: boolean,
+  active: boolean, 
+  children: JSXElement|JSXElement[], 
+}) => (
+  <Block 
+    extraClass={`text-xs text-center relative absolute w-full h-full top-0 left-0 p-1 rounded-lg border-2 hover:border-2 hover:border-slate-400 ${
+      props.active 
+        ? "border-slate-900"
+        :  props.selected 
+          ? "border-slate-400" 
+          : "border-white"
+    }`} 
+    style={{background: props.color}}
+    data-id={props.id}
+  >
+    {props.children}
+  </Block>
+)
+
 const AddButton = (props: JSX.HTMLAttributes<HTMLButtonElement> & {
   selected?: boolean
 }) => (
-  <ButtonWithHoverOutline
+  <Button
     {...props}
-    buttonClass={`flex-0 bg-white hover:bg-neutral-900 hover:text-white  drop-shadow-sm`}
+    extraClass={`flex-0 bg-white hover:bg-neutral-900 hover:text-white  `}
   >
   +
-  </ButtonWithHoverOutline>
+  </Button>
 )
 
 const Knob = (props: {
@@ -121,7 +142,7 @@ const Knob = (props: {
 
   return (
     <button
-      class="inline-block m-auto aspect-square rounded-full bg-neutral-900 cursor-e-resize select-none  drop-shadow-sm "
+      class="inline-block m-auto aspect-square rounded-full bg-neutral-900 cursor-e-resize select-none   "
       style={{
         height: "32px",
         width: "32px",
@@ -153,7 +174,7 @@ const LabeledKnob = (
         <Knob rotation={props.rotation} onupdate={props.onupdate} />
       </div>
       <span
-        class="flex-0 flex items-center self-center normal-case select-none text-neutral-500 whitespace-nowrap select-none  drop-shadow-sm"
+        class="flex-0 flex items-center self-center normal-case select-none text-neutral-500 whitespace-nowrap select-none  "
         style={{ "font-size": "7pt" }}
       >
         {props.label}
@@ -177,5 +198,6 @@ export {
   ButtonWithHoverOutline,
   LabeledKnob,
   CenteredLabel,
-  AddButton
+  AddButton,
+  CompositionBar
 }

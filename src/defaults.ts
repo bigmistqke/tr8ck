@@ -1,8 +1,6 @@
 import { store } from "./Store";
 import { Note, Pattern, Sampler, Synth } from "./types";
-import {
-  getHex
-} from "pastel-color";
+import { getHex } from "pastel-color";
 import { SEQUENCE_LENGTH, TRACK_AMOUNT } from "./constants";
 
 export const defaultSampler = (index: number, tracksLength: number) : Sampler => ({
@@ -22,7 +20,6 @@ export const defaultSampler = (index: number, tracksLength: number) : Sampler =>
   arrayBufferName: undefined,
   color: getHex(),
   fxChains: new Array(tracksLength).fill(0).map(() => []),
-  nothings: [],
   speed: 1,
   inverted: false,
   compilingIds: [],
@@ -40,7 +37,6 @@ export const defaultSynth = (index: number) : Synth => ({
   fxChains: [[]],
   speed: 1,
   compilingIds: [],
-  nothings: [],
 })
 
 export const defaultSequence = () : Note[] => 

@@ -2,7 +2,7 @@ import { StreamLanguage } from "@codemirror/language";
 import { Compartment, EditorState } from "@codemirror/state";
 import { basicSetup, EditorView } from "codemirror";
 import { createEffect, createSignal, JSX, onMount, Show } from "solid-js";
-import { actions } from "../Store";
+import { actions } from "../../Store";
 import s from "./CodeMirror.module.css";
 import faust from "./faust";
 
@@ -137,7 +137,7 @@ export default (props:
     }
   });
 
-  return <div class={`rounded-lg overflow-hidden shadow-sm ${
+  return <div class={`rounded-lg overflow-hidden drop-shadow-sm ${
     !props.error ? "rounded-br-md" : ""
   } ${
     props.containerClass

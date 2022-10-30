@@ -4,10 +4,12 @@ import { actions } from "../Store";
 import { Choice } from "../types";
 import { Button } from "./UIElements";
 
+
 export interface ContextMenuProps{
   options: Choice[]
-  left: number,
-  bottom: number    
+  left: number
+  bottom: number   
+  resolve: (value?: unknown) => void
 }
 
 interface Direction extends JSX.CSSProperties  {
@@ -48,6 +50,10 @@ export default (props: ContextMenuProps) => {
   })
 
   const close = function(){
+    console.log("this happens")
+    if("resolve" in props && typeof props.resolve === "function")
+      props.resolve()
+
     setTimeout(()=>{
       actions.closeContextMenu();
       window.removeEventListener("mousedown", close)

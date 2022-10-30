@@ -87,7 +87,7 @@ export default (props: {
   return (
     <Show when={props.state.initialName !== "input" && props.state.initialName !== "output"}>
       <Block 
-        extraClass={`relative inline-flex flex-col p-1 text-center bg-neutral-200 rounded-lg transition-opacity duration-250 ${
+        extraClass={`relative shrink-0 inline-flex flex-col p-1 text-center bg-neutral-200 rounded-lg transition-opacity duration-250 ${
           props.class || ""
         } ${
           getOpacity()

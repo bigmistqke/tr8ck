@@ -46,7 +46,7 @@ const Instrument = () => {
                 </Switch>
                 <FxChain 
                   fxChain={instrument().fxChains[0]} 
-                  class="w-full overflow-hidden"
+                  class="w-full"
                   createNodeAndAddToFxChain={actions.createNodeAndAddToFxChainInstrument}
                   removeNodeFromFxChain={actions.removeNodeFromFxChainInstrument}
                   compilingIds={instrument().compilingIds}

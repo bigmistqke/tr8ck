@@ -2,7 +2,7 @@ import { createEffect, createSignal, Match, onMount, Show, Switch } from "solid-
 import ftom from "../utils/ftom"
 import mton from "../utils/mton"
 import { actions, store } from "../Store"
-import { ActiveNote, Note as NoteType } from "../types"
+import { ActiveNote, Choice, Note as NoteType } from "../types"
 
 const Note = (props: {
   setNote: (note: Note) => void
@@ -10,12 +10,9 @@ const Note = (props: {
   shouldBlink: boolean
   class: string
 }) => {
-
-  onMount(()=>{
-    console.log('mount!')
-  })
-
   const [hovered, setHovered] = createSignal(false);
+  const [contextMenuOpen, setContextMenuOpen] = createSignal(false);
+
 
   const getColor = () => {
     if (props.note.type === "inactive") return ""
@@ -23,75 +20,104 @@ const Note = (props: {
     return actions.getColorInstrument(props.note.instrumentIndex)
   }
 
-  const setSilence = (e) => {
-    e.preventDefault()
-    props.setNote(
-      shouldDeactivate()
-        ? { type: "inactive" }
-        : { type: "silence" }
+  
+  const shouldDeactivate = () =>
+  (props.note.type === "silence") || (
+    props.note.type === "active" &&
+    store.selection.instrumentIndex === props.note.instrumentIndex &&
+    props.note.frequency === store.selection.frequency
     )
+    
+  const addSilence = () => {
+    props.setNote({ type: "silence" })
   }
 
-  const shouldDeactivate = () =>
-      (props.note.type === "silence") || (
-        props.note.type === "active" &&
-        store.selection.instrumentIndex === props.note.instrumentIndex &&
-        props.note.frequency === store.selection.frequency
-      )
+  const addInactive = () => {
+    props.setNote({ type: "inactive" })
+  }
 
-  const setNote = () => {
+  const addNote = () => {
+    props.setNote({
+      type: "active",
+      frequency: store.selection.frequency,
+      instrumentIndex: store.selection.instrumentIndex,
+    })
+  }
+
+  const toggleNote = () => {
     
-
     if(store.keys.shift){
-      if(props.note.type === "active"){
-        actions.setSelectedInstrumentIndex(props.note.instrumentIndex)
-        actions.setSelectedFrequency(props.note.frequency)
+      if(props.note.type !== "silence"){
+        addSilence();
+        return;
       }
+      addInactive()
       return;
     }
 
-    
+    if(props.note.type !== "active"){
+      addNote()
+      return
+    }
+    addInactive()
 
-    props.setNote(
-      shouldDeactivate()
-        ? { type: "inactive" }
-        : {
-            type: "active",
-            frequency: store.selection.frequency,
-            instrumentIndex: store.selection.instrumentIndex,
-          }
-    )
   }
 
   const mouseout = () => setHovered(false)
   const mouseenter = () => setHovered(true)
 
+
   createEffect(() => {
     if(store.keys.control && hovered() && store.bools.mousedown){
-      props.setNote(
-        {
-          type: "active",
-          frequency: store.selection.frequency,
-          instrumentIndex: store.selection.instrumentIndex,
-        }
-      )
+      addNote()
     }
   })
 
   createEffect(() => {
     if(store.keys.alt && hovered() && store.bools.mousedown){
-      props.setNote(
-        {
-          type: "inactive",
-        }
-      )
+      addInactive()
     }
   })
 
+  const contextMenu = async (e: MouseEvent) => {
+    setContextMenuOpen(true)
+
+    const options : Choice[] = [];
+
+    const note = props.note;
+
+    if(note.type === "active"){
+      options.push({
+        title: "select",
+        callback: () => {
+          actions.setSelectedInstrumentIndex(note.instrumentIndex)
+          actions.setSelectedFrequency(note.frequency)
+        }
+      })
+    }
+
+    const types : [type: string, title: string, callback: ()=>void][] = [
+      ["active", "add note", addNote],
+      ["silence", "add silence", addSilence],
+      ["inactive", "clear note", addInactive]
+    ]
+
+    for(let [type, title, callback] of types){
+      if(type === note.type) continue
+      options.push({
+        title,
+        callback
+      })
+    }
+
+    await actions.openContextMenu({e, options})
+    setContextMenuOpen(false);
+  }
+
   return (
     <button
-      onclick={setNote}
-      oncontextmenu={setSilence}
+      onclick={toggleNote}
+      oncontextmenu={contextMenu}
       onmousemove={mouseenter}
       onmouseout={mouseout}
       class={`flex-1 flex overflow-auto flex-row ${props.class} items-center`}
@@ -99,6 +125,8 @@ const Note = (props: {
       <div
         class={`flex flex-1 h-full relative overflow-hidden rounded-xl hover:bg-selected-instrument ${
           props.shouldBlink ? "bg-white" : "bg-neutral-900"
+        } ${
+          contextMenuOpen() ? "bg-selected-instrument" : ""
         }`}
         style={{
           background: getColor(),

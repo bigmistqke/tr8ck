@@ -6,7 +6,7 @@ import { FaustElement, Synth as SynthType } from "../../../types"
 import {Block, Button} from "../../UIElements";
 import zeptoid from "zeptoid"
 import randomColor from "../../../utils/randomColor";
-import CodeMirror from "../../../codemirror6/CodeMirror";
+import CodeMirror from "../../../libs/codemirror6/CodeMirror";
 import FxPool from "../../Fx/FxPool";
 import FxChain from "../../Fx/FxChain";
 import Fx from "../../Fx/Fx";

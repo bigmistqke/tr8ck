@@ -1,42 +1,54 @@
 import deepClone from "deep-clone";
 import Faust2WebAudio, { Faust, FaustAudioWorkletNode } from "faust2webaudio";
 import { TCompiledDsp } from "faust2webaudio/src/types";
-import {
-  getHex
-} from "pastel-color";
-import { batch, createEffect, createMemo, createRoot, onCleanup, untrack } from "solid-js";
+import { getHex, getPastelColor } from "pastel-color";
+import { batch, createEffect, createMemo, createRoot, untrack } from "solid-js";
 import { createStore, produce, StoreSetter } from "solid-js/store";
 import zeptoid from "zeptoid";
-import { EditorModalProps } from "./components/EditorModal";
-import FxChain from "./components/Fx/FxChain";
 
 import { DEFAULT_FX, EXTRA_FXS, FXS, INSTRUMENT_AMOUNT, ROOT_FREQUENCY, SEQUENCE_LENGTH, TRACK_AMOUNT } from "./constants";
 import { defaultPattern, defaultSampler, defaultSequences, defaultSynth } from "./defaults";
-import getParametersFromDsp from "./faust/collectParameters";
 
-import { Choice, CompositionBlockProps, CompositionElementProps, CompositionGroupProps, DSPElement, FaustElement, FaustFactory, FaustParameter, Instrument, Note, Pattern, Sampler, Synth, Track, Waveform, WebAudioElement } from "./types";
+import getParametersFromDsp from "./libs/faust/collectParameters";
+import arrayBufferToWaveform from "./libs/waveform/arrayBufferToWaveform";
+import audioBufferToWaveform from "./libs/waveform/audioBufferToWaveform";
+
 import ARRAY from "./utils/ARRAY";
 import bpmToMs from "./utils/bpmToMs";
 import copyArrayBuffer from "./utils/copyArrayBuffer";
-// import download from "./utils/download";
+import download from "./utils/download";
 import fileToArrayBuffer from "./utils/fileToArrayBuffer";
 import ftom from "./utils/ftom";
 import getLocalPosition from "./utils/getLocalPosition";
 import Initialized from "./utils/Initialized";
+import moveInArray from "./utils/moveInArray";
+
 import AudioNodeRecorder from "./utils/webaudio/AudioNodeRecorder";
 import cloneAudioBuffer from "./utils/webaudio/cloneAudioBuffer";
 import { getWebAudioMediaStream } from "./utils/webaudio/getWebAudioMediaStream";
 import StreamRecorder from "./utils/webaudio/StreamRecorder";
-import arrayBufferToWaveform from "./waveform/arrayBufferToWaveform";
-import audioBufferToWaveform from "./waveform/audioBufferToWaveform";
 
-import {Buffer} from "buffer";
+import { EditorModalProps } from "./components/EditorModal";
 import { ContextMenuProps } from "./components/ContextMenu";
-import download from "./utils/download";
-import {Composition} from "./types";
-import moveInArray from "./utils/moveInArray";
 
-// import * as flate from 'wasm-flate';
+import { 
+  Choice, 
+  Composition,
+  CompositionBlockProps, 
+  CompositionElementProps, 
+  CompositionGroupProps, 
+  DSPElement, 
+  FaustElement, 
+  FaustFactory, 
+  FaustParameter, 
+  Instrument,  
+  Pattern, 
+  Sampler, 
+  Synth, 
+  Track, 
+  Waveform, 
+  WebAudioElement 
+} from "./types";
 
 interface DraggingFx {
   id: string
@@ -58,6 +70,12 @@ const [store, setStore] = createStore<{
   clock: number
   clockOffset: number
   compositionClock: number
+  relativeClock: number
+  playingElementPattern?: {
+    element: CompositionElementProps,
+    pattern: Pattern
+  }
+  loopingBlock?: CompositionBlockProps
   bpm: number
   playMode: "pattern" | "composition"
   rootNode?: AudioNode
@@ -75,9 +93,8 @@ const [store, setStore] = createStore<{
     frequency: number
     instrumentIndex: number
     patternId: string
-    blockId?: string
     trackIndex: number
-    composition: Composition
+    composition: (CompositionElementProps | CompositionGroupProps)[]
   }
   keys: {
     shift: boolean
@@ -86,7 +103,7 @@ const [store, setStore] = createStore<{
   }
   dragging: {
     fx: DraggingFx | undefined,
-    composition: CompositionFx | undefined
+    composition: CompositionBlockProps | undefined
   }
   bools: {
     playing: boolean
@@ -99,12 +116,13 @@ const [store, setStore] = createStore<{
   disposes: any[]
   contextmenu?: ContextMenuProps
 }>({
-  clock: -1,
   compositionClock: 0,
   faust: undefined,
   context: new window.AudioContext(),
   playMode: "pattern",
+  clock: 0,
   clockOffset: 0,
+  relativeClock: 0,
   bpm: 120,
   rootNode: undefined,
   audioRecorder: undefined,
@@ -125,7 +143,6 @@ const [store, setStore] = createStore<{
     frequency: ROOT_FREQUENCY,
     instrumentIndex: 0,
     patternId: "first",
-    blockId: undefined,
     trackIndex: 0,
     composition: []
   },
@@ -150,16 +167,7 @@ const [store, setStore] = createStore<{
   // TODO: disposes collects all the createRoot-dispose-functions
   // figure out a better way to structure these into the code
   disposes: [],
-  contextmenu: {
-    options: [
-      {title: "test", callback: () => console.log("test")},
-      {title: "test2", callback: () => console.log("test")},
-      {title: "test3", callback: () => console.log("test")}
-
-    ],
-    bottom: 0,
-    left: 0
-  }
+  contextmenu: undefined
 })
 
 // INIT
@@ -185,6 +193,8 @@ const initKeyboard = () => {
   window.addEventListener("resize", () => setStore("contextmenu", undefined))
   window.addEventListener("mousedown", () => setStore("bools", "mousedown", true))
   window.addEventListener("mouseup", () => setStore("bools", "mousedown", false))
+  window.addEventListener("contextmenu", (e) => {e.preventDefault()})
+
   window.addEventListener("blur", () => {
     setStore("keys", "alt", false);
     setStore("keys", "shift", false);
@@ -242,31 +252,102 @@ const initKeyboard = () => {
   }
 }
 
-let lastTime = performance.now();
 
+const initPlayingCompositionElementPattern = () => {
+  const element = findFirstCompositionElement();
+  if(!element) return;
+  const pattern = getPattern(element?.patternId)
+  if(!pattern) return;
+  setStore("playingElementPattern", {
+    element: {...element},
+    pattern: {...pattern}
+  })
+}
 
+const updatePlayingCompositionElementPattern = () => {
+  const element = findNextPlayingCompositionElement()!;
+
+  if(!element){
+    return
+  }
+
+  const pattern = getPattern(element.patternId)!;
+
+  setStore("selection", "patternId", pattern.id);
+
+  setStore("playingElementPattern", {
+    element: {...element},
+    pattern: {...pattern}
+  })
+}
+
+const updateRelativeClock = () => {
+  if(store.playMode !== "composition") {
+    const pattern = getSelectedPattern()
+    if(!pattern) return;
+    setStore("relativeClock", (clock) => (clock + 1) % pattern.sequences[0].length )
+    return
+  }
+  if(store.composition.length > 0){
+    if(!store.playingElementPattern){
+      initPlayingCompositionElementPattern()
+    }
+
+    const playingElementPattern = store.playingElementPattern;
+    if(!playingElementPattern) return;
+
+    let relativeClock = store.relativeClock + 1;
+
+    const playingPatternSize = playingElementPattern.pattern.sequences[0].length;
+
+    if(relativeClock >= playingPatternSize){
+      relativeClock = 0
+      updatePlayingCompositionElementPattern();
+    }
+
+    setStore("relativeClock", relativeClock)
+  }
+}
+
+const setRelativeClock = (index: number) => {
+  const delta = index - store.relativeClock;
+  setStore("relativeClock", c => c + delta);
+  setStore("clock", c => c + delta);
+  renderAudio();
+}
 
 const initClock = function(){
   setStore("clockOffset", performance.now())
 
+  let lastTimestamp: number | undefined;
+  let microClock = 0;
 
-
-
-  const run = () => {
-    if(!store.bools.playing) return
-    requestAnimationFrame(run);
-    const c = Math.floor((performance.now() - store.clockOffset) / bpmToMs(store.bpm));
-    if(c > store.clock){
-      setStore("compositionClock", Math.floor(store.clock / SEQUENCE_LENGTH) % getCompositionSize())
-      setStore("clock", c);
-      renderAudio(c);
-      lastTime = performance.now();
+  const run = (timestamp: number) => {
+    if(!store.bools.playing) {
+      lastTimestamp = undefined;
+      return
     }
+    requestAnimationFrame(run);
+    if(lastTimestamp){
+      const delta = timestamp - lastTimestamp;
+      microClock += delta;
+      const extraClock = microClock / bpmToMs(store.bpm);
+
+      if(extraClock >= 1){
+        updateRelativeClock();
+        setStore("clock", clock => clock + Math.floor(extraClock));
+        renderAudio();
+        microClock = (extraClock % 1) * bpmToMs(store.bpm);
+      }
+    }
+    
+    lastTimestamp = timestamp;
   }
 
   createEffect(()=>{
-    if(store.bools.playing)
-      untrack(run)
+    if(store.bools.playing){
+      untrack(()=>requestAnimationFrame(run))
+    }
   })
 }
 
@@ -384,7 +465,39 @@ const createFactory = (dsp: TCompiledDsp, id?: string) => {
 
 // GENERAL PARAMETERS
 
-const setPlayMode = (playMode: "pattern" | "composition") => setStore("playMode", playMode)
+
+
+const findFirstCompositionElement = (block: CompositionBlockProps) => {
+
+  const blocks = [block];
+
+  let currentBlock;
+  while(blocks.length > 0){
+    currentBlock = blocks.shift();
+    if(!currentBlock) continue;
+    if("blocks" in currentBlock){
+      blocks.unshift(...currentBlock.blocks);
+      continue;
+    }
+    return currentBlock;
+  }
+}
+
+const setPlayMode = (playMode: "pattern" | "composition") => {
+  setStore("playMode", playMode)
+  if(store.playMode === "composition"){
+    if(store.composition.length === 0) return undefined;
+
+    const firstElement = findFirstCompositionElement(store.composition[0]);
+    
+    if(!firstElement) return;
+    setStore("playingElementPattern", {
+      element: {...firstElement},
+      pattern: getPattern(firstElement.patternId)
+    });
+    setStore("relativeClock", store.clock % store.playingElementPattern!.pattern.sequences[0].length)
+  }
+}
 const setBPM = (bpm: StoreSetter<number, ["bpm"]>, offset: number) => {
   batch(()=>{
     setStore("bpm", bpm)
@@ -658,7 +771,7 @@ const setSynthCode = (code:string) =>
 
 const incrementSelectedPatternId = (e: MouseEvent) => {
   const offset = getLocalPosition(e).percentage.y > 50 ? 1 : -1
-  const index = store.patterns.findIndex(pattern => pattern.id === store.selection.patternId)
+  const index = getPatternIndex(store.selection.patternId)
   
   let nextIndex = (index + offset) % store.patterns.length
   if (nextIndex < 0) nextIndex = store.patterns.length - 1
@@ -669,7 +782,7 @@ const incrementSelectedPatternId = (e: MouseEvent) => {
 
 const setSelectedPatternId = (id: string) => {
   if(id === store.selection.patternId) return;
-  const pattern = store.patterns.find(pattern => pattern.id === id);
+  const pattern = getPattern(id);
   if(!pattern) return;
   console.time("pattern changing")
   setStore("selection", "patternId", id)
@@ -677,33 +790,27 @@ const setSelectedPatternId = (id: string) => {
   console.timeEnd("pattern changing")
 };  
 
-const getSelectedPattern = () => store.patterns.find(pattern => pattern.id === store.selection.patternId)
+const getSelectedPattern = () => getPattern(store.selection.patternId)
 
-const getSelectedPatternIndex = () => store.patterns.findIndex(pattern => pattern.id === store.selection.patternId)
+const getSelectedPatternIndex = () => getPatternIndex(store.selection.patternId)
 
 const clearSelectedPattern = () => setStore("patterns", getSelectedPatternIndex(), "sequences", defaultSequences())
 
-const copySelectedPattern = () => {
-  const json = JSON.stringify(store.patterns[getSelectedPatternIndex()]);
-  const clonedPattern = JSON.parse(json)
-  clonedPattern.id = zeptoid()
-  // clonedPattern.color = getHex(JSON.stringify(store.patterns[getSelectedPatternIndex()].sequences));
-  clonedPattern.color = getHex();
-/*   createEffect(()=>{
+const createPattern = () => {
+  const id = zeptoid()
+  setStore("patterns", patterns => [...patterns, defaultPattern(id)])
+  setStore("selection", "patternId", id)
+}
+const duplicatePattern = (pattern: Pattern) => {
+  const duplicate = JSON.parse(JSON.stringify(pattern));
+  duplicate.id = zeptoid()
+  duplicate.color = getHex();
+  setStore("patterns", produce((patterns: Pattern[]) => patterns.splice(getSelectedPatternIndex() + 1, 0, duplicate)))
+  setSelectedPatternId(duplicate.id)
+}
 
-
-    const sequences = store.patterns.find(pattern => pattern.id === clonedPattern.id)?.sequences;
-
-    setStore("patterns", pattern => pattern.id === clonedPattern.id, "color", getHex(JSON.stringify(sequences)));
-
-  }) */
-
-  setStore("patterns", produce((patterns: Pattern[]) => patterns.splice(getSelectedPatternIndex() + 1, 0, clonedPattern)))
-  setSelectedPatternId(clonedPattern.id)
-
-  createEffect(()=>{
-    
-  })
+const duplicateSelectedPattern = () => {
+  duplicatePattern(store.patterns[getSelectedPatternIndex()]);
 }
 
 const createFaustElementFromFaustFactory = async (
@@ -792,8 +899,9 @@ const createFaustElementFromFaustFactory = async (
   return element
 }
 
+const getPattern = (patternId: string) => store.patterns.find(pattern => pattern.id === patternId)
 const getPatternIndex = (patternId: string) => store.patterns.findIndex(pattern =>pattern.id === patternId)
-const getPatternColor = (patternId: string) =>  store.patterns.find(pattern =>pattern.id === patternId)?.color || ""
+const getPatternColor = (patternId: string) =>  getPattern(patternId)?.color || ""
 
 
 // FXCHAIN
@@ -1105,9 +1213,9 @@ const getBlockIndex = (blockId: string) => store.composition.findIndex(block => 
 const getCompositionBlockSize = (block: CompositionBlockProps) => {
   let count = 0;
   const walk = (block: CompositionBlockProps) => {
-    if(block.type === "element")
+    if(block.type === "element"){
       count++
-    else{
+    }else{
       count += block.size
     }
   }
@@ -1123,38 +1231,40 @@ const getCompositionSize = createMemo(() => getArrayCompositionBlockSize(store.c
 
 const dragComposition = (
   targetId: string, 
-  dragId: string, 
-  patternId: string, 
+  block: CompositionBlockProps,
   position: {
     x: number;
     y: number;
 }
 ) => {
+  if(targetId === block.id) return
+  if(position.y > 48 && position.y < 52) return;
+
   if(!targetId){
-    if(store.composition.find(pattern => pattern.id === dragId))
-        return
-    setStore("composition", produce((composition) => composition.push({id: dragId, patternId, type: "element"})))
+    if(store.composition.find(b => b === block)) return
+    setStore("composition", produce((composition) => composition.push(block)))
     return;
   }
 
-  if(targetId === dragId) return
-
-  if(position.y < 0) return
+  // if(position.y < 0) return
 
   const targetIndex = actions.getBlockIndex(targetId)
-  const dragIndex = actions.getBlockIndex(dragId)
-  const nextIndex = position.y > 55 ? targetIndex + 1 : targetIndex
+  const dragIndex = actions.getBlockIndex(block.id)
+
+  if((
+    position.y < 50 && targetIndex > dragIndex 
+    || position.y > 50 && targetIndex < dragIndex
+  )) return
 
   if(dragIndex === -1){
-    setStore("composition", produce((composition) => composition.splice(nextIndex, 0, {id: dragId, patternId, type: "element"})))
+    setStore("composition", produce((composition) => composition.splice(targetIndex, 0, block)))
     return
   }
-
-  setStore("composition", produce((composition) => moveInArray(composition, dragIndex, nextIndex)))
+  setStore("composition", produce((composition) => moveInArray(composition, dragIndex, targetIndex)))
 }
 
 const startCompositionSelection = (elementOrGroup: (CompositionGroupProps | CompositionElementProps)) => {
-  console.log("startCompositionSelection")
+  
   
   setStore("selection", "composition", [elementOrGroup])
 }
@@ -1178,10 +1288,19 @@ const groupCompositionSelection = () => {
     return;
   }
 
+  const colorId = JSON.stringify(store.selection.composition.map(v => {
+    if("color" in v) return v.color;
+    return getPattern(v.patternId)!.color;
+  }));
+
+  const {hslRaw} = getPastelColor(colorId);
+
+  const color = `hsl(${hslRaw[0]}, 85%, 85%)`
+
   const group : CompositionGroupProps = {
     type: "group",
     id: zeptoid(),
-    color: getHex(),
+    color: color,
     size: getArrayCompositionBlockSize(store.selection.composition),
     blocks: store.selection.composition
   }
@@ -1193,7 +1312,7 @@ const groupCompositionSelection = () => {
 
   // const index = store.composition.findIndex(block => block === )
 
-    console.log(from, from - to);
+    
 
   setStore("composition", produce(composition => composition.splice(from, to - from, group)))
 
@@ -1203,8 +1322,13 @@ const groupCompositionSelection = () => {
 
 const ungroupCompositionGroup = (group: CompositionGroupProps) => {
   const index = store.composition.findIndex(block => block === group);
+
+  if(store.loopingBlock && store.loopingBlock.id === group.id){
+    resetLoopingBlock()
+  }
+
   if(!index){
-    console.log("could not find the index", index);
+    console.error("could not find the index", index);
   }
 
   setStore("composition", produce((composition) => composition.splice(index, 1, ...group.blocks)))
@@ -1240,15 +1364,51 @@ const duplicateCompositionSelection = () => {
 
   const duplicate = store.selection.composition.map(block => renameIdsCompositionBlock(block))
 
-  setStore("composition", produce((composition) => composition.splice(index, 0, ...duplicate)))
+  setStore("composition", produce((composition) => composition.splice((index + 1) , 0, ...duplicate)))
   resetCompositionSelection();
 }
 
+const isElementInBlock = (element: CompositionElementProps, block: CompositionBlockProps) => {
 
-const loopCompositionSelection = () => {
+  if(block.type === "element"){
+    return element === block;
+  }
 
+  const stack = [...block.blocks].reverse();
+
+  while(stack.length > 0){
+    const b = stack.pop();
+    if(!b) continue
+
+    if(b.id === element.id) return true;
+    if("blocks" in b){
+      stack.push(...b.blocks)
+    }
+  }
+
+  console.log('couldnt find it i guess');
+  return false
 }
 
+
+const setLoopingBlock = (block: CompositionBlockProps) => {
+  setStore("loopingBlock", {...block});
+
+  if(
+    store.playingElementPattern 
+    && isElementInBlock(store.playingElementPattern.element, block)
+  ) { 
+    return;
+  }
+
+  const element = findFirstCompositionElement(block);
+  if(!element) return;
+
+  const pattern = getPattern(element.patternId);
+  setStore("playingElementPattern", {element, pattern})
+}
+
+const resetLoopingBlock = () => setStore("loopingBlock", undefined)
 
 
 // AUDIO-ENGINE
@@ -1375,52 +1535,48 @@ const playNote = (instrumentIndex: number, frequency: number, trackIndex: number
   }
 }
 
+const findNextPlayingCompositionElement = () => {
+  let foundCurrentElement = false;
 
+  if(store.loopingBlock && store.loopingBlock.type === "element")
+    return store.loopingBlock;
 
-const findPlayingCompositionElement = (index: number) => {
-  let count = 0;
-  let playingElement: CompositionElementProps | undefined = undefined;
-  const walk = (block: CompositionBlockProps) => {
-    if(playingElement) return;
-    if(block.type === "element"){
-      if(count === index) {
-        playingElement = block
-      }
-      count++
-    }else{
-      block.blocks.forEach(walk)
+  const stack = store.loopingBlock 
+    ? [...store.loopingBlock.blocks]
+    : [...store.composition];
+
+  const first = stack[0]
+
+  let node;
+  while(stack.length !== 0){
+    node = stack.shift()!;
+
+    if("blocks" in node) {
+      stack.unshift(...node.blocks)
+      continue;
+    }
+    if(node.id === store.playingElementPattern?.element.id){
+      foundCurrentElement = true;
+      continue;
+    }
+    if(foundCurrentElement){
+      return node
     }
   }
-  store.composition.forEach(walk)
-  return playingElement;
+  
+  return findFirstCompositionElement(first)
 }
 
-const renderAudio = (clock: number) => {
-  let pattern;
-  if(store.playMode === "composition"){
-    const index = Math.floor(clock / SEQUENCE_LENGTH) % getCompositionSize();
-
-    if(store.composition.length === 0) {
-      pattern = getSelectedPattern()
-    }else{
-      const element = findPlayingCompositionElement(index);
-      if(!element) {
-        console.error("CAN NOT FIND ELEMENT IN COMPOSITION!!!")
-        return;
-      }
-      const {patternId, id} = element;
-      pattern = store.patterns.find(pattern => pattern.id === patternId);
-      setStore("selection", "blockId", id);
-      setSelectedPatternId(patternId)
-    }
-  }else{
-    pattern = getSelectedPattern()
-  }
+const renderAudio = () => {
+  let pattern = 
+    store.playMode === "pattern" || store.composition.length === 0 || !store.playingElementPattern
+      ? getSelectedPattern() 
+      : store.playingElementPattern.pattern
 
   if(!pattern) return;
-  const tick = clock % pattern.sequences[0].length;
+
   pattern.sequences.forEach((sequence, track) => {
-    const note = sequence[tick];
+    const note = sequence[store.relativeClock];
     switch(note.type){
       case "inactive":
         return;
@@ -1535,11 +1691,8 @@ const resetPlaying = () => {
   })
 }
 
-const setClock = (index: number) => {
-  setStore("clock", index);
-  setStore("clockOffset", performance.now() - store.clock * bpmToMs(store.bpm))
-  renderAudio();
-}
+
+
 
 
 // returns String
@@ -1763,14 +1916,18 @@ const openLocalSet = async (data: SerializeData) => {
   setStore("bools", "playing", true)
 }
 
-const openContextMenu = ({e, options} : {e: MouseEvent, options: Choice[]}) => {
+const openContextMenu = ({e, options} : {e: MouseEvent, options: Choice[]}) => new Promise((resolve) => {
   e.preventDefault();
+  e.stopPropagation();
   setStore("contextmenu", {
     options,
     bottom: window.innerHeight - e.clientY,
-    left: e.clientX
+    left: e.clientX,
+    // idk why, but this 'resolve: resolve' needs to be written like this
+    // otherwise it would execute resolve immediately
+    resolve: resolve
   })
-}
+})
 
 
 const closeContextMenu = () => {
@@ -1779,41 +1936,59 @@ const closeContextMenu = () => {
 
 
 const actions = {
-  initContext, initFaust, initKeyboard, initTracks, initFx, initExtraFx, initClock, /* initCodeMirror, */
+  initContext, initFaust, initKeyboard, initTracks, initFx, initExtraFx, initClock, 
+
   setBPM, setPlayMode, setSelectedFrequency,
+  togglePlaying, resetPlaying,
+  setRelativeClock,
+
   compileFaust, createFactory, updateFaustFactory, createFaustElementFromFaustFactory,
+
   addFx,
+  createFaustNode, 
+
+  addInstrument,
   getSelectedInstrument, setSelectedInstrument, setSelectedInstrumentIndex, cloneSelectedInstrument,
   setInstrument, getColorInstrument, initInstruments,
   createNodeAndAddToFxChainInstrument, removeNodeFromFxChainInstrument, updateOrderFxChainInstrument,
   toggleTypeSelectedInstrument, 
   setTypeSelectedInstrument,
+
   uploadAudioFile,
   addToArrayBuffers,
-  addInstrument,
+
   setSamplerNavigation, setSamplerSelection, 
   setSamplerWaveform, setSamplerAudioBuffer,
   setSamplerSpeed, revertSamplerAudiobuffer,
   setSamplerFromArrayBuffer,
+
   setSynthCode,
-  createFaustNode, 
   playNote, 
+
   toggleTrackMode, 
   setSelectedTrackIndex,
   getSelectedTrack,
   toggleTrackSolo,
   createNodeAndAddToFxChainTrack, removeNodeFromFxChainTrack, updateOrderFxChainTrack,
-  setSelectedPatternId, incrementSelectedPatternId, getSelectedPattern, clearSelectedPattern, copySelectedPattern, 
+  
+  setSelectedPatternId, incrementSelectedPatternId, getSelectedPattern, clearSelectedPattern, 
+  duplicateSelectedPattern, duplicatePattern,
   getPatternIndex, getPatternColor,
-  getBlockIndex, dragComposition,
-  startCompositionSelection, endCompositionSelection, resetCompositionSelection, 
-  groupCompositionSelection, ungroupCompositionGroup, duplicateCompositionSelection, loopCompositionSelection,
-  renderAudio,
+  createPattern,
+
+  getBlockIndex, 
+  
   setDragging,
+  dragComposition,
+  startCompositionSelection, endCompositionSelection, resetCompositionSelection, 
+  groupCompositionSelection, ungroupCompositionGroup, duplicateCompositionSelection,
+  
+  setLoopingBlock, resetLoopingBlock,
+  
+  renderAudio,
   addToEditors, removeFromEditors, setCoding,
+  
   recordAudio,
-  togglePlaying, resetPlaying,
-  setClock,
   getParametersFromDsp,
   saveLocalSet, openLocalSet,
   openContextMenu, closeContextMenu

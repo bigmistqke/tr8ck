@@ -1,7 +1,7 @@
 import { EditorState } from "@codemirror/state";
 import { TCompiledDsp } from "faust2webaudio/src/types";
 import { createSignal, onMount } from "solid-js";
-import CodeMirror from "../codemirror6/CodeMirror";
+import CodeMirror from "../libs/codemirror6/CodeMirror";
 import cursorEventHandler from "../utils/cursorEventHandler";
 import { actions } from "../Store";
 import { Button } from "./UIElements";
@@ -42,7 +42,7 @@ export default (props: EditorModalProps) => {
     // TODO: find out the proper way to do this...
     const innerText = (containerRef.querySelector(".cm-content") as HTMLElement).innerText;
     const code = innerText.replaceAll(/\n\n/g, "\n") 
-    console.log("code is ", code);
+    
 
     if(!code) return;
     const result = await props.compile(code);

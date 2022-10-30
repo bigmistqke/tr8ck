@@ -1,4 +1,4 @@
-import {Button, ButtonBar, ButtonWithHoverOutline, SliderBar} from "./UIElements"
+import {Bar, Button, ButtonBar, ButtonWithHoverOutline, SliderBar} from "./UIElements"
 import { actions, store } from "../Store"
 import { For, Index } from "solid-js"
 import Track, { TinyTrack } from "./Track"
@@ -13,13 +13,14 @@ export default () => {
             "scrollbar-gutter": "stable"
           }}>
               
-              <ButtonWithHoverOutline 
+              <Bar 
                 onclick={actions.incrementSelectedPatternId} 
+                extraClass="select-none"
                 style={{background: actions.getPatternColor(store.selection.patternId)}}
               >
                   #{store.patterns.findIndex(pattern => pattern.id === store.selection.patternId)}
-              </ButtonWithHoverOutline>   
-              <ButtonBar onclick={actions.copySelectedPattern}>clone</ButtonBar>
+              </Bar>   
+              <ButtonBar onclick={actions.duplicateSelectedPattern}>clone</ButtonBar>
               <ButtonBar onclick={actions.clearSelectedPattern}>clear</ButtonBar>
               <ButtonBar 
                 onclick={actions.incrementSelectedPatternId} 
@@ -45,7 +46,7 @@ export default () => {
               </Index>
               <TinyTrack
                 amount={SEQUENCE_LENGTH}
-                onclick={actions.setClock}
+                onclick={actions.setRelativeClock}
               />
             </div> 
           </div>

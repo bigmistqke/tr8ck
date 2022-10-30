@@ -10,7 +10,6 @@ export default (props: {
     ({
       title: name,
       callback: () => {
-        console.log('arrayBuffer is ', arrayBuffer);
         actions.setSamplerFromArrayBuffer({arrayBuffer, name})
         props.setFilesOpened(false);
       }
