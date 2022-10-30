@@ -15,9 +15,9 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
 - [x] pattern-view
 - [x] composition-view
   - [x] compose a sequence of patterns
-  - [ ] group patterns together
+  - [x] group patterns together
   - [ ] loop groups
-  - [ ] copy/paste groups
+  - [x] copy/paste groups
 - [x] synths with Faust
   - [x] compile custom Faust dsp-code
   - [x] editable parameters
@@ -32,7 +32,7 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
   - [x] edit and recompile Faust code fx
 - [x] code-editor for Faust (CodeMirror6)
   - [x] synthax-highlighting and completions
-  - [ ] error handling
+  - [x] error handling
 - [x] save set
 - [x] record live / render set
 
