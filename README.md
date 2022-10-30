@@ -16,7 +16,7 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
 - [x] composition-view
   - [x] compose a sequence of patterns
   - [x] group patterns together
-  - [ ] loop groups
+  - [x] loop groups
   - [x] copy/paste groups
 - [x] synths with Faust
   - [x] compile custom Faust dsp-code
