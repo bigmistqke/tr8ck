@@ -1,4 +1,4 @@
-## TR8CK
+## TR8CK (if you know a better name please make an issue and tell me)
 
 an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding via [`faust2webaudio`](https://github.com/grame-cncm/faust2webaudio) and UI powered by [`SolidJS`](https://www.solidjs.com/)
 
