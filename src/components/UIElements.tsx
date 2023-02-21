@@ -1,37 +1,50 @@
-import { JSX, JSXElement } from "solid-js"
-import cursorEventHandler from "../utils/cursorEventHandler"
-import { actions } from "../Store"
+import { JSX, JSXElement } from "solid-js";
+import cursorEventHandler from "../utils/cursorEventHandler";
+import { actions } from "../Store";
 
 function Button(
-  props: JSX.HTMLAttributes<HTMLButtonElement> & { selected?: boolean, extraClass?: string }
+  props: JSX.HTMLAttributes<HTMLButtonElement> & {
+    selected?: boolean;
+    extraClass?: string;
+    error?: boolean;
+  }
 ) {
   return (
     <button
       {...props}
-      class={`flex-1 rounded-lg text-xs tracking-widest uppercase hover:bg-neutral-900 hover:text-white select-none transition-colors  ${
+      class={`flex-1 border-red-500 rounded-lg text-xs tracking-widest uppercase hover:bg-neutral-900 hover:text-white select-none transition-colors  ${
         props.extraClass || ""
-      } ${props.selected ? "bg-neutral-900 text-white" : "bg-white"}`}
+      } ${props.selected ? "bg-neutral-900 text-white " : "bg-white"} ${
+        props.error ? "border-2 " : ""
+      }`}
       style={props.style}
     >
-      {props.children}
+      {props.error ? "error" : props.children}
     </button>
-  )
+  );
 }
 
 const ButtonBar = (
-  props: JSX.HTMLAttributes<HTMLButtonElement> & { selected?: boolean, extraClass?: string }
+  props: JSX.HTMLAttributes<HTMLButtonElement> & {
+    selected?: boolean;
+    extraClass?: string;
+  }
 ) => {
   return (
     <Button
       {...props}
-      extraClass={`h-6 text-xs tracking-widest text-center select-none   ${props.extraClass || ""}`}
+      extraClass={`h-6 text-xs tracking-widest text-center select-none   ${
+        props.extraClass || ""
+      }`}
     >
       {props.children}
     </Button>
-  )
-}
+  );
+};
 
-const Block = (props: JSX.HTMLAttributes<HTMLDivElement> & {extraClass?: string}) => {
+const Block = (
+  props: JSX.HTMLAttributes<HTMLDivElement> & { extraClass?: string }
+) => {
   return (
     <div
       {...props}
@@ -39,30 +52,32 @@ const Block = (props: JSX.HTMLAttributes<HTMLDivElement> & {extraClass?: string}
     >
       {props.children}
     </div>
-  ) 
-}
+  );
+};
 
-const Bar = (props: JSX.HTMLAttributes<HTMLDivElement> & {extraClass?: string}) => (
+const Bar = (
+  props: JSX.HTMLAttributes<HTMLDivElement> & { extraClass?: string }
+) => (
   <Block
     {...props}
     extraClass={`${props.extraClass} flex flex-1 h-6 max-h-6 items-center justify-center content-center text-center text-xs tracking-widest  `}
   >
     {props.children}
   </Block>
-)
+);
 
 const SliderBar = (
   props: JSX.HTMLAttributes<HTMLDivElement> & {
-    onupdate: (delta: number, timespan: number) => void
-    extraClass?: string
+    onupdate: (delta: number, timespan: number) => void;
+    extraClass?: string;
   }
 ) => {
   const mousedown = () => {
-    const start = performance.now()
+    const start = performance.now();
     cursorEventHandler(({ movementX }) =>
       props.onupdate(movementX, performance.now() - start)
-    )
-  }
+    );
+  };
   return (
     <Block
       {...props}
@@ -71,15 +86,15 @@ const SliderBar = (
     >
       {props.children}
     </Block>
-  )
-}
+  );
+};
 
 const ButtonWithHoverOutline = (
   props: JSX.HTMLAttributes<HTMLButtonElement> & {
-    extraClass?: string
-    buttonClass?: string 
-    selected?: boolean
-    active?: boolean
+    extraClass?: string;
+    buttonClass?: string;
+    selected?: boolean;
+    active?: boolean;
   }
 ) => (
   <button onclick={props.onclick} class={`flex-1 flex h-6 ${props.extraClass}`}>
@@ -87,58 +102,60 @@ const ButtonWithHoverOutline = (
       class={`flex flex-1 h-full justify-center items-center text-xs rounded-lg uppercase border-2  select-none transition-colors   ${
         props.buttonClass
       } ${
-        props.active 
+        props.active
           ? "border-slate-700"
-          : props.selected 
-            ? "border-slate-500 hover:border-slate-600" 
-            : "border-white hover:border-slate-400"
+          : props.selected
+          ? "border-slate-500 hover:border-slate-600"
+          : "border-white hover:border-slate-400"
       }`}
       style={props.style}
     >
       <span>{props.children}</span>
     </div>
   </button>
-)
+);
 
 const CompositionBar = (props: {
-  id: string, 
-  color: string
-  selected: boolean,
-  active: boolean, 
-  children: JSXElement|JSXElement[], 
+  id: string;
+  color: string;
+  selected: boolean;
+  active: boolean;
+  children: JSXElement | JSXElement[];
 }) => (
-  <Block 
+  <Block
     extraClass={`text-xs text-center relative absolute w-full h-full top-0 left-0 p-1 rounded-lg border-2 hover:border-2 hover:border-slate-400 ${
-      props.active 
+      props.active
         ? "border-slate-900"
-        :  props.selected 
-          ? "border-slate-400" 
-          : "border-white"
-    }`} 
-    style={{background: props.color}}
+        : props.selected
+        ? "border-slate-400"
+        : "border-white"
+    }`}
+    style={{ background: props.color }}
     data-id={props.id}
   >
     {props.children}
   </Block>
-)
+);
 
-const AddButton = (props: JSX.HTMLAttributes<HTMLButtonElement> & {
-  selected?: boolean
-}) => (
+const AddButton = (
+  props: JSX.HTMLAttributes<HTMLButtonElement> & {
+    selected?: boolean;
+  }
+) => (
   <Button
     {...props}
     extraClass={`flex-0 bg-white hover:bg-neutral-900 hover:text-white  `}
   >
-  +
+    +
   </Button>
-)
+);
 
 const Knob = (props: {
-  rotation: number
-  onupdate: (delta: number) => void
+  rotation: number;
+  onupdate: (delta: number) => void;
 }) => {
   const mousedown = () =>
-    cursorEventHandler(({ movementX }) => props.onupdate(movementX))
+    cursorEventHandler(({ movementX }) => props.onupdate(movementX));
 
   return (
     <button
@@ -158,14 +175,14 @@ const Knob = (props: {
         }}
       />
     </button>
-  )
-}
+  );
+};
 
 const LabeledKnob = (
   props: JSX.HTMLAttributes<HTMLDivElement> & {
-    rotation: number
-    onupdate: (delta: number) => void
-    label: string
+    rotation: number;
+    onupdate: (delta: number) => void;
+    label: string;
   }
 ) => {
   return (
@@ -180,14 +197,14 @@ const LabeledKnob = (
         {props.label}
       </span>
     </div>
-  )
-}
+  );
+};
 
 const CenteredLabel = (props: { label: JSXElement | JSXElement[] }) => (
   <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 normal-case text-xs text-center text-neutral-500 whitespace-pre select-none ">
     {props.label}
   </span>
-)
+);
 
 export {
   Button,
@@ -199,5 +216,5 @@ export {
   LabeledKnob,
   CenteredLabel,
   AddButton,
-  CompositionBar
-}
+  CompositionBar,
+};
