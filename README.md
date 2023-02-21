@@ -16,10 +16,10 @@ https://user-images.githubusercontent.com/10504064/220415497-a61fff7a-7cda-400c-
 # upload and edit samples
 https://user-images.githubusercontent.com/10504064/220416542-024aa939-0372-4723-a464-aec7f15d078b.mp4
 
-# write/edit your own synths in the Faust programming language
+# write/edit your own synths in Faust
 https://user-images.githubusercontent.com/10504064/220416957-18c35628-d6ba-4745-82ac-101fc8e680b0.mp4
 
-# write/edit your own fx in the Faust programming language
+# write/edit your own FX in Faust
 https://user-images.githubusercontent.com/10504064/220417215-2faa7eb9-7a98-43c5-9a20-f662cee657eb.mp4
 
 # CAPABILITIES:
