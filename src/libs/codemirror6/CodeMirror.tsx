@@ -6,12 +6,16 @@ import { actions } from "../../Store";
 import s from "./CodeMirror.module.css";
 import faust from "./faust";
 
-let language = new Compartment;
-const tabSize = new Compartment;
+let language = new Compartment();
+const tabSize = new Compartment();
 
 import { TiArrowDown, TiArrowUp } from "solid-icons/ti";
 
-const ErrorMessage = (props: {error: string, reverseIcon?: boolean, width: number}) => {
+const ErrorMessage = (props: {
+  error: string;
+  reverseIcon?: boolean;
+  width: number;
+}) => {
   const [full, setFull] = createSignal(false);
   const [icon, setIcon] = createSignal(false);
 
@@ -20,15 +24,15 @@ const ErrorMessage = (props: {error: string, reverseIcon?: boolean, width: numbe
 
   createEffect(() => {
     props.error;
-    setIcon(message.offsetHeight > container.offsetHeight)
-  })
+    setIcon(message.offsetHeight > container.offsetHeight);
+  });
 
   createEffect(() => {
-    console.log("WIDTH", props.width)
-  })
+    console.log("WIDTH", props.width);
+  });
 
   return (
-    <div 
+    <div
       class={`relative flex bg-red-200 text-xs text-mono whitespace-pre-wrap overflow-auto ${
         full() ? "max-h-24" : "max-h-10"
       }`}
@@ -38,42 +42,39 @@ const ErrorMessage = (props: {error: string, reverseIcon?: boolean, width: numbe
       ref={container!}
     >
       <Show when={icon()}>
-        <button class="absolute top-0 right-2 h-6 w-6" onmousedown={() => setFull(full => !full)}>
-            <Show when={(props.reverseIcon && full()) || (!props.reverseIcon && !full())} fallback={
-              <TiArrowDown class="w-full h-full"/>
-            }>
-              <TiArrowUp class="w-full h-full"/>
-            </Show>
+        <button
+          class="absolute top-0 right-2 h-6 w-6"
+          onmousedown={() => setFull(full => !full)}
+        >
+          <Show
+            when={
+              (props.reverseIcon && full()) || (!props.reverseIcon && !full())
+            }
+            fallback={<TiArrowDown class="w-full h-full" />}
+          >
+            <TiArrowUp class="w-full h-full" />
+          </Show>
         </button>
       </Show>
-      <div class={`flex-1 ${
-        full() ? "overflow-auto" : "overflow-hidden"
-      }`}>
-        <div 
-          class="p-2 pr-8" 
-          ref={message!}
-        >
+      <div class={`flex-1 ${full() ? "overflow-auto" : "overflow-hidden"}`}>
+        <div class="p-2 pr-8" ref={message!}>
           {props.error}
         </div>
-
       </div>
-
     </div>
-  )
-}
+  );
+};
 
-
-export default (props: 
-  JSX.HTMLAttributes<HTMLDivElement> 
-  & {
-    code: () => string
-    setState?: (state: EditorState) => void
-    error?: string
-    reverseIcon?: boolean
-    containerClass?: string
+export default (
+  props: JSX.HTMLAttributes<HTMLDivElement> & {
+    code: () => string;
+    setState?: (state: EditorState) => void;
+    error?: string;
+    reverseIcon?: boolean;
+    containerClass?: string;
   }
 ) => {
-  let editorRef : HTMLDivElement;
+  let editorRef: HTMLDivElement;
   let editorState: EditorState;
   let editorView: EditorView;
 
@@ -106,53 +107,58 @@ export default (props:
 
     return diagnostics
   }) */
-  
 
-  onMount(()=>{
+  onMount(() => {
     editorState = EditorState.create({
       extensions: [
         basicSetup,
         language.of(StreamLanguage.define(faust)),
         tabSize.of(EditorState.tabSize.of(8)),
       ],
-      doc: props.code()
-    })
+      doc: props.code(),
+    });
 
     editorView = new EditorView({
       state: editorState,
       parent: editorRef,
-    })
+    });
 
-    editorView.contentDOM.addEventListener("focus", () => actions.setCoding(true))
-    editorView.contentDOM.addEventListener("blur", () => actions.setCoding(false))
+    editorView.contentDOM.addEventListener("focus", () =>
+      actions.setCoding(true)
+    );
+    editorView.contentDOM.addEventListener("blur", () =>
+      actions.setCoding(false)
+    );
     resizeObserver.observe(editorRef);
     setWidth(editorRef.offsetWidth);
-  })
-  
-  createEffect(()=> editorView.contentDOM.innerText = props.code())
+  });
 
-  const resizeObserver = new ResizeObserver((entries) => {
+  createEffect(() => (editorView.contentDOM.innerText = props.code()));
+
+  const resizeObserver = new ResizeObserver(entries => {
     for (const entry of entries) {
-      setWidth(entry.contentRect.width)
+      setWidth(entry.contentRect.width);
     }
   });
 
-  return <div class={`rounded-lg overflow-hidden drop-shadow-sm ${
-    !props.error ? "rounded-br-md" : ""
-  } ${
-    props.containerClass
-  }`}>
-    <div 
-      onmousedown={e => e.stopPropagation()}
-      class={`flex-1 overflow-auto cursor-text  ${
-        s.container
-      } ${
-        props.class
-      }`} 
-      ref={editorRef!}
-    />
-    <Show when={props.error}>
-      <ErrorMessage error={props.error!} reverseIcon={props.reverseIcon} width={width()}/>      
-    </Show>
-  </div>
-}
+  return (
+    <div
+      class={`rounded-lg overflow-hidden drop-shadow-sm ${
+        !props.error ? "rounded-br-md" : ""
+      } ${props.containerClass}`}
+    >
+      <div
+        onmousedown={e => e.stopPropagation()}
+        class={`flex-1 overflow-auto cursor-text  ${s.container} ${props.class}`}
+        ref={editorRef!}
+      />
+      <Show when={props.error}>
+        <ErrorMessage
+          error={props.error!}
+          reverseIcon={props.reverseIcon}
+          width={width()}
+        />
+      </Show>
+    </div>
+  );
+};

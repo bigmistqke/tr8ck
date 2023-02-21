@@ -1,9 +1,13 @@
-import { createEffect, For, Index, onMount } from "solid-js"
-import { createStore } from "solid-js/store"
-import { store } from "../Store"
-import Note, { Note as NoteType } from "./Note"
+import { createEffect, For, Index, onMount } from "solid-js";
+import { createStore } from "solid-js/store";
+import { store } from "../Store";
+import Note, { Note as NoteType } from "./Note";
 
-export default (props: { amount: number; sequence: NoteType[], active: boolean }) => {
+export default (props: {
+  amount: number;
+  sequence: NoteType[];
+  active: boolean;
+}) => {
   return (
     <div class="flex flex-1" style={{ "min-width": "1rem" }}>
       <div class="flex flex-1 flex-col gap-2 mt-2">
@@ -11,11 +15,14 @@ export default (props: { amount: number; sequence: NoteType[], active: boolean }
           {(_, index) => (
             <Note
               setNote={(note: NoteType) => {
-                const [_, setSeq] = createStore<NoteType[]>(props.sequence)
-                setSeq(index, note)
+                const [_, setSeq] = createStore<NoteType[]>(props.sequence);
+                setSeq(index, note);
               }}
               note={props.sequence[index]}
-              shouldBlink={props.active && store.relativeClock % props.sequence.length === index}
+              shouldBlink={
+                props.active &&
+                store.relativeClock % props.sequence.length === index
+              }
               class={
                 ((index + 1) / 4) % 1 === 0 && index < props.amount - 1
                   ? "mb-4"
@@ -26,18 +33,15 @@ export default (props: { amount: number; sequence: NoteType[], active: boolean }
         </Index>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export const TinyTrack = (props: {
-  amount: number
-  onclick: (index: number) => void
+  amount: number;
+  onclick: (index: number) => void;
 }) => {
-
   return (
-    <div
-      class="flex flex-0"
-    >
+    <div class="flex flex-0">
       <div class="flex flex-0 w-4 flex-col gap-2 mt-2">
         <For each={new Array(props.amount).fill(0)}>
           {(el, index) => (
@@ -57,9 +61,7 @@ export const TinyTrack = (props: {
                 }`}
                 style={{
                   filter:
-                    store.relativeClock === index()
-                      ? "brightness(1.5)"
-                      : "",
+                    store.relativeClock === index() ? "brightness(1.5)" : "",
                 }}
               />
             </button>
@@ -67,6 +69,5 @@ export const TinyTrack = (props: {
         </For>
       </div>
     </div>
-  )
-}
-
+  );
+};

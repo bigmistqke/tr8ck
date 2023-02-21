@@ -10,7 +10,7 @@ import {
 import { batch, createSignal, For } from "solid-js";
 import { createStore } from "solid-js/store";
 
-const Sortable = (props) => {
+const Sortable = props => {
   const sortable = createSortable(props.item);
   return (
     <div
@@ -23,12 +23,12 @@ const Sortable = (props) => {
   );
 };
 
-const Column = (props) => {
+const Column = props => {
   const droppable = createDroppable(props.id);
   return (
     <div use:droppable class="column">
       <SortableProvider ids={props.items}>
-        <For each={props.items}>{(item) => <Sortable item={item} />}</For>
+        <For each={props.items}>{item => <Sortable item={item} />}</For>
       </SortableProvider>
     </div>
   );
@@ -42,9 +42,9 @@ export const MultipleListsExample = () => {
 
   const containerIds = () => Object.keys(containers);
 
-  const isContainer = (id) => containerIds().includes(id);
+  const isContainer = id => containerIds().includes(id);
 
-  const getContainer = (id) => {
+  const getContainer = id => {
     for (const [key, items] of Object.entries(containers)) {
       if (items.includes(id)) {
         return key;
@@ -55,16 +55,14 @@ export const MultipleListsExample = () => {
   const closestContainerOrItem = (draggable, droppables, context) => {
     const closestContainer = closestCenter(
       draggable,
-      droppables.filter((droppable) => isContainer(droppable.id)),
+      droppables.filter(droppable => isContainer(droppable.id)),
       context
     );
     if (closestContainer) {
       const containerItemIds = containers[closestContainer.id];
       const closestItem = closestCenter(
         draggable,
-        droppables.filter((droppable) =>
-          containerItemIds.includes(droppable.id)
-        ),
+        droppables.filter(droppable => containerItemIds.includes(droppable.id)),
         context
       );
       if (!closestItem) {
@@ -104,10 +102,10 @@ export const MultipleListsExample = () => {
       if (index === -1) index = containerItemIds.length;
 
       batch(() => {
-        setContainers(draggableContainer, (items) =>
-          items.filter((item) => item !== draggable.id)
+        setContainers(draggableContainer, items =>
+          items.filter(item => item !== draggable.id)
         );
-        setContainers(droppableContainer, (items) => [
+        setContainers(droppableContainer, items => [
           ...items.slice(0, index),
           draggable.id,
           ...items.slice(index),
@@ -138,11 +136,11 @@ export const MultipleListsExample = () => {
         <DragDropSensors />
         <div class="columns">
           <For each={containerIds()}>
-            {(key) => <Column id={key} items={containers[key]} />}
+            {key => <Column id={key} items={containers[key]} />}
           </For>
         </div>
         <DragOverlay>
-          {(draggable) => <div class="sortable">{draggable.id}</div>}
+          {draggable => <div class="sortable">{draggable.id}</div>}
         </DragOverlay>
       </DragDropProvider>
     </div>

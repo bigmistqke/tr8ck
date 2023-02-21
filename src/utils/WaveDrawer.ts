@@ -1,18 +1,16 @@
-import { Waveform } from "../types"
+import { Waveform } from "../types";
 
 class WaveDrawer {
-  canvas?: HTMLCanvasElement 
-  context?: CanvasRenderingContext2D 
-  waveform?: Waveform
-  accumulator: number = 0
-  ratio?: number 
-  filter?: number 
+  canvas?: HTMLCanvasElement;
+  context?: CanvasRenderingContext2D;
+  waveform?: Waveform;
+  accumulator: number = 0;
+  ratio?: number;
+  filter?: number;
 
-  constructor(){
-    
-  }
-  
-/*   setCanvas: (canvas: HTMLCanvasElement) => void
+  constructor() {}
+
+  /*   setCanvas: (canvas: HTMLCanvasElement) => void
   setWaveform: (waveform: Waveform) => void
   drawToCanvas: (start: number, end: number, width: number) => void */
 
@@ -20,32 +18,33 @@ class WaveDrawer {
     const range = 256;
     const offset = 128;
     return height - ((amplitude + offset) * height) / range;
-  }
+  };
 
   drawSample = (x: number, y: any) => {
     this.accumulator += y;
-    if(x % this.filter! === this.filter! - 1){
+    if (x % this.filter! === this.filter! - 1) {
       const average = this.accumulator / this.filter!;
-      const _x = (x ) * this.ratio!;
+      const _x = x * this.ratio!;
       const _y = this.scaleY(average, this.canvas!.offsetHeight) + 0.5;
       this.context!.lineTo(_x, _y);
-      this.accumulator = 0
+      this.accumulator = 0;
     }
-  }
+  };
 
   setCanvas = (canvas: HTMLCanvasElement) => {
     this.canvas = canvas;
-    this.context = canvas.getContext('2d') as CanvasRenderingContext2D;
-  }
+    this.context = canvas.getContext("2d") as CanvasRenderingContext2D;
+  };
 
-  setWaveform = (waveform: Waveform) => this.waveform = waveform;
+  setWaveform = (waveform: Waveform) => (this.waveform = waveform);
 
   drawToCanvas = (start: number, end: number, width: number) => {
     console.time("draw_wave");
-    if(!this.waveform || !this.context || !this.canvas) return;
+    if (!this.waveform || !this.context || !this.canvas) return;
 
     this.canvas.width = width;
-    this.canvas.height = this.canvas.parentElement?.offsetHeight || this.canvas.offsetHeight;
+    this.canvas.height =
+      this.canvas.parentElement?.offsetHeight || this.canvas.offsetHeight;
 
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -56,22 +55,22 @@ class WaveDrawer {
 
     this.accumulator = 0;
 
-    for (let x = start; x < (this.waveform.length - end); x++) {
-      this.drawSample(x, this.waveform.max[x] - start)
+    for (let x = start; x < this.waveform.length - end; x++) {
+      this.drawSample(x, this.waveform.max[x] - start);
     }
 
     this.accumulator = 0;
 
-    for (let x = (this.waveform.length - 1 - end); x >= start; x--) {
-      this.drawSample(x, this.waveform.min[x] - start)
+    for (let x = this.waveform.length - 1 - end; x >= start; x--) {
+      this.drawSample(x, this.waveform.min[x] - start);
     }
-    
+
     this.context.closePath();
     this.context.fillStyle = "white";
     this.context.fill();
-    
+
     console.timeEnd("draw_wave");
-  }
+  };
 }
 
 /* 

@@ -1,3 +1,5 @@
-import randomColor from "randomColor"
+import randomColor from "randomColor";
 
-export default function():string{return randomColor()}
+export default function (): string {
+  return randomColor();
+}

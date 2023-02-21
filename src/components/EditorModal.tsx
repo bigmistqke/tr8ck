@@ -10,83 +10,79 @@ import { FaustCompilationResponse, FaustElement } from "../types";
 import s from "./EditorModal.module.css";
 
 export interface EditorModalProps {
-  id: string
-  code: () => string
-  compile: (code: string) => Promise<FaustCompilationResponse>
+  id: string;
+  code: () => string;
+  compile: (code: string) => Promise<FaustCompilationResponse>;
 }
 
 export default (props: EditorModalProps) => {
-  let editorRef : HTMLDivElement;
-  let containerRef : HTMLDivElement;
+  let editorRef: HTMLDivElement;
+  let containerRef: HTMLDivElement;
 
-  const [position, setPosition] = createSignal({left: (window.innerWidth - 504) / 2, top: (window.innerHeight - 412) / 2})
-  const [dragging, setDragging] = createSignal(false)
+  const [position, setPosition] = createSignal({
+    left: (window.innerWidth - 504) / 2,
+    top: (window.innerHeight - 412) / 2,
+  });
+  const [dragging, setDragging] = createSignal(false);
   const [state, setState] = createSignal<EditorState>();
-  const [error, setError] = createSignal<string | undefined>()
-
+  const [error, setError] = createSignal<string | undefined>();
 
   const mousedown = async () => {
     setDragging(true);
-    await cursorEventHandler(({movementX, movementY}) => {
-      setPosition(({top, left}) => ({
+    await cursorEventHandler(({ movementX, movementY }) => {
+      setPosition(({ top, left }) => ({
         top: top + movementY,
-        left: left + movementX
-      })
-    )})
+        left: left + movementX,
+      }));
+    });
     setDragging(false);
-  }
-
+  };
 
   const compile = async (e: MouseEvent) => {
     e.stopPropagation();
     // TODO: find out the proper way to do this...
-    const innerText = (containerRef.querySelector(".cm-content") as HTMLElement).innerText;
-    const code = innerText.replaceAll(/\n\n/g, "\n") 
-    
+    const innerText = (containerRef.querySelector(".cm-content") as HTMLElement)
+      .innerText;
+    const code = innerText.replaceAll(/\n\n/g, "\n");
 
-    if(!code) return;
+    if (!code) return;
     const result = await props.compile(code);
-    setError("error" in  result ? result.error : undefined)
-  }
+    setError("error" in result ? result.error : undefined);
+  };
 
   const close = (e: MouseEvent) => {
     e.stopPropagation();
-    actions.removeFromEditors(props.id)
-  }
+    actions.removeFromEditors(props.id);
+  };
 
   return (
-    <div 
+    <div
       class={`absolute w-full h-full z-50 ${
         dragging() ? "" : "pointer-events-none"
       }`}
-      
     >
-      <div 
+      <div
         ref={containerRef!}
         onmousedown={mousedown}
-        class={`absolute bg-neutral-100 max-w-full max-h-full pb-12 p-2 rounded-xl cursor-move shadow-xl pointer-events-auto resize ${
-          s.editorModal
-        }`}
+        class={`absolute bg-neutral-100 max-w-full max-h-full pb-12 p-2 rounded-xl cursor-move shadow-xl pointer-events-auto resize ${s.editorModal}`}
         style={{
-          "margin-left": position().left +"px",
-          "margin-top": position().top +"px",
+          "margin-left": position().left + "px",
+          "margin-top": position().top + "px",
           // "max-width": "100vw"
         }}
-
       >
-        <div class={`flex flex-col gap-2 ${
-          dragging() ? "pointer-events-none select-none" : ""}
-        }`}>
+        <div
+          class={`flex flex-col gap-2 ${
+            dragging() ? "pointer-events-none select-none" : ""
+          }
+        }`}
+        >
           <div class="flex flex-0 gap-2 h-6">
-            <Button 
-              onmousedown={compile}
-            >
-              compile
-            </Button>
-            <Button onmousedown={close} children="close"/>
+            <Button onmousedown={compile}>compile</Button>
+            <Button onmousedown={close} children="close" />
           </div>
           <div class="">
-            <CodeMirror 
+            <CodeMirror
               code={props.code}
               setState={setState}
               class={`min-w-full h-64 w-128 resize ${
@@ -102,5 +98,5 @@ export default (props: EditorModalProps) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

@@ -7,8 +7,4 @@ const setCanvas = drawer.setCanvas;
 const setWaveform = drawer.setWaveform;
 const renderWaveform = drawer.drawToCanvas;
 
-export {
-  setCanvas,
-  setWaveform,
-  renderWaveform
-}
+export { setCanvas, setWaveform, renderWaveform };

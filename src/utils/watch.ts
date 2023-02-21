@@ -1,1 +1,1 @@
-export default (value: any) => {}
+export default (value: any) => {};

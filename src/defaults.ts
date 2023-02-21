@@ -3,7 +3,10 @@ import { Note, Pattern, Sampler, Synth } from "./types";
 import { getHex } from "pastel-color";
 import { SEQUENCE_LENGTH, TRACK_AMOUNT } from "./constants";
 
-export const defaultSampler = (index: number, tracksLength: number) : Sampler => ({
+export const defaultSampler = (
+  index: number,
+  tracksLength: number
+): Sampler => ({
   active: true,
   index,
   type: "sampler",
@@ -13,8 +16,8 @@ export const defaultSampler = (index: number, tracksLength: number) : Sampler =>
   },
   selection: {
     start: 0,
-    end: 0
-  },        
+    end: 0,
+  },
   src: undefined,
   waveform: undefined,
   arrayBufferName: undefined,
@@ -23,10 +26,10 @@ export const defaultSampler = (index: number, tracksLength: number) : Sampler =>
   speed: 1,
   inverted: false,
   compilingIds: [],
-  pan: 0
-})
+  pan: 0,
+});
 
-export const defaultSynth = (index: number) : Synth => ({
+export const defaultSynth = (index: number): Synth => ({
   active: true,
   index: index,
   type: "synth",
@@ -37,22 +40,20 @@ export const defaultSynth = (index: number) : Synth => ({
   fxChains: [[]],
   speed: 1,
   compilingIds: [],
-})
+});
 
-export const defaultSequence = () : Note[] => 
+export const defaultSequence = (): Note[] =>
   Array(SEQUENCE_LENGTH)
     .fill(0)
     .map(() => ({
-      type: "inactive"
-    }))
+      type: "inactive",
+    }));
 
-export const defaultSequences = () => 
-  Array(TRACK_AMOUNT)
-    .fill(0)
-    .map(defaultSequence)
+export const defaultSequences = () =>
+  Array(TRACK_AMOUNT).fill(0).map(defaultSequence);
 
-export const defaultPattern = (id: string) : Pattern => ({
+export const defaultPattern = (id: string): Pattern => ({
   id,
   color: getHex(),
-  sequences: defaultSequences()
-})
+  sequences: defaultSequences(),
+});
