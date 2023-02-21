@@ -1,5 +1,8 @@
 ## TR8CK (if you know a better name please make an issue and tell me)
 
+🚧 still under construction, but if you want to go ahead and play around with it, please do! 🚧<br/>
+🚧 currently unable to be build/deployed due to how `faust2webaudio` links to the wasm-file! 🚧
+
 an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding via [`faust2webaudio`](https://github.com/grame-cncm/faust2webaudio) and UI powered by [`SolidJS`](https://www.solidjs.com/)
 
 https://user-images.githubusercontent.com/10504064/220413126-94eee963-d698-4bbc-8058-e18a1c2e3e0a.mp4
@@ -44,7 +47,4 @@ https://user-images.githubusercontent.com/10504064/220417215-2faa7eb9-7a98-43c5-
   - [x] error handling
 - [x] save set
 - [x] record live / render set
-
-🚧 still under construction, but if you want to go ahead and play around with it, please do! 🚧
-🚧 currently unable to be build/deployed due to how `faust2webaudio` links to the wasm-file! 🚧
 
