@@ -2,15 +2,24 @@
 
 an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding via [`faust2webaudio`](https://github.com/grame-cncm/faust2webaudio) and UI powered by [`SolidJS`](https://www.solidjs.com/)
 
-![tr8ck](https://user-images.githubusercontent.com/10504064/194712686-f1523f87-3085-430c-8ba5-aac2ac953622.gif)
+https://user-images.githubusercontent.com/10504064/220413126-94eee963-d698-4bbc-8058-e18a1c2e3e0a.mp4
 
 # create patterns
-![afbeelding](https://user-images.githubusercontent.com/10504064/194711560-eb68c80d-7164-4e16-ac09-2deb6f93b6fb.png)
+https://user-images.githubusercontent.com/10504064/220414816-88cefef8-b7ee-436d-845d-12e939bb32c6.mp4
 
 # form compositions from patterns
-![afbeelding](https://user-images.githubusercontent.com/10504064/194711611-6bfff893-359f-4e8d-814e-bf9ac4cb8849.png)
+https://user-images.githubusercontent.com/10504064/220415497-a61fff7a-7cda-400c-a2ea-7ea2e74cf5bd.mp4
 
-# TODO
+# upload and edit samples
+https://user-images.githubusercontent.com/10504064/220416542-024aa939-0372-4723-a464-aec7f15d078b.mp4
+
+# write/edit your own synths in the Faust programming language
+https://user-images.githubusercontent.com/10504064/220416957-18c35628-d6ba-4745-82ac-101fc8e680b0.mp4
+
+# write/edit your own fx in the Faust programming language
+https://user-images.githubusercontent.com/10504064/220417215-2faa7eb9-7a98-43c5-9a20-f662cee657eb.mp4
+
+# CAPABILITIES:
 
 - [x] pattern-view
 - [x] composition-view
@@ -37,3 +46,5 @@ an experimental DAW/tracker with [`Faust`](https://faust.grame.fr/) live coding 
 - [x] record live / render set
 
 🚧 still under construction, but if you want to go ahead and play around with it, please do! 🚧
+🚧 currently unable to be build/deployed due to how `faust2webaudio` links to the wasm-file! 🚧
+
